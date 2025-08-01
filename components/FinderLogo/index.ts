@@ -1,0 +1,1 @@
+export { FinderLogo } from './FinderLogo'; 
