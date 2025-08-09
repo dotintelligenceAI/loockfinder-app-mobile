@@ -1,11 +1,10 @@
-import { ProtectedRoute } from '@/components';
+import { CustomTabBar, ProtectedRoute } from '@/components';
+import { useTabBarVisibility } from '@/contexts/TabBarVisibilityContext';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform, View } from 'react-native';
-import { useTabBarVisibility } from '@/contexts/TabBarVisibilityContext';
-import { Animated } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { Animated, Platform, View } from 'react-native';
 
 function TabLayoutContent() {
   const { visible } = useTabBarVisibility();
@@ -25,6 +24,8 @@ function TabLayoutContent() {
         <Tabs
           screenOptions={{
             headerShown: false,
+            // Usa a TabBar personalizada com traduções
+            tabBar: (props) => <CustomTabBar {...props} />,
             tabBarActiveTintColor: '#FFFFFF',
             tabBarInactiveTintColor: '#666666',
             tabBarStyle: {
@@ -71,12 +72,12 @@ function TabLayoutContent() {
             }}
           />
           <Tabs.Screen
-            name="feed"
+            name="links"
             options={{
-              title: 'Feed',
+              title: 'Links',
               tabBarIcon: ({ color, focused }) => (
                 <Ionicons 
-                  name={focused ? 'grid' : 'grid-outline'} 
+                  name={focused ? 'link' : 'link-outline'} 
                   size={24} 
                   color={color} 
                 />
@@ -84,12 +85,12 @@ function TabLayoutContent() {
             }}
           />
           <Tabs.Screen
-            name="buscar"
+            name="cupons"
             options={{
-              title: 'Buscar',
+              title: 'Cupons',
               tabBarIcon: ({ color, focused }) => (
                 <Ionicons 
-                  name={focused ? 'search' : 'search-outline'} 
+                  name={focused ? 'pricetags' : 'pricetags-outline'} 
                   size={24} 
                   color={color} 
                 />

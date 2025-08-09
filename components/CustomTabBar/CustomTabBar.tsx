@@ -1,15 +1,15 @@
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
+import { useI18n } from '@/contexts/I18nContext';
 import { useTabBarVisibility } from '@/contexts/TabBarVisibilityContext';
+import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import React from 'react';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TabItem {
   name: string;
   title: string;
   icon: keyof typeof Ionicons.glyphMap;
-  onPress: () => void;
 }
 
 interface CustomTabBarProps {
@@ -21,6 +21,7 @@ interface CustomTabBarProps {
 export default function CustomTabBar({ state, descriptors, navigation }: CustomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { visible } = useTabBarVisibility();
+  const { t } = useI18n();
   const translateY = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -31,13 +32,14 @@ export default function CustomTabBar({ state, descriptors, navigation }: CustomT
     }).start();
   }, [visible]);
 
-  // Definir ordem e configuração das abas
-  const tabsConfig = [
-    { name: 'home', title: 'Home', icon: 'home-outline' as keyof typeof Ionicons.glyphMap },
-    { name: 'links', title: 'Links', icon: 'link-outline' as keyof typeof Ionicons.glyphMap },
-    { name: 'cupons', title: 'Cupons', icon: 'fa-ticket-simple' as keyof typeof Ionicons.glyphMap },
-    { name: 'chat-ia', title: 'IA Finder', icon: 'chatbubble-outline' as keyof typeof Ionicons.glyphMap },
-    { name: 'perfil', title: 'Profile', icon: 'person-outline' as keyof typeof Ionicons.glyphMap },
+  // Definir ordem e configuração das abas com traduções
+  // ATENÇÃO: nomes devem bater com os arquivos/rotas em app/(tabs)
+  const tabsConfig: TabItem[] = [
+    { name: 'home', title: t('tabs.home.title'), icon: 'home-outline' },
+    { name: 'links', title: t('tabs.links.title'), icon: 'link-outline' },
+    { name: 'cupons', title: t('tabs.cupons.title'), icon: 'pricetags-outline' },
+    { name: 'chat-ia', title: t('tabs.chat.title'), icon: 'chatbubble-outline' },
+    { name: 'perfil', title: t('tabs.perfil.title'), icon: 'person-outline' },
   ];
 
   return (

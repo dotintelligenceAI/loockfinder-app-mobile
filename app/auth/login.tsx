@@ -1,39 +1,23 @@
 import { Button, Input, ProtectedRoute, Toast } from '@/components';
+import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/hooks/useToast';
 import { authService } from '@/services';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 
 function LoginScreenContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [languageDropdownVisible, setLanguageDropdownVisible] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('pt-BR');
   const { toast, showError } = useToast();
-
-  // Fechar dropdown quando clicar fora
-  React.useEffect(() => {
-    const handlePressOutside = () => {
-      if (languageDropdownVisible) {
-        setLanguageDropdownVisible(false);
-      }
-    };
-
-    // Adicionar listener para fechar dropdown
-    const subscription = { remove: () => {} };
-    
-    return () => {
-      subscription.remove();
-    };
-  }, [languageDropdownVisible]);
+  const { t } = useI18n();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      showError('Por favor, preencha todos os campos');
+      showError(t('auth.login.emailRequired'));
       return;
     }
 
@@ -45,10 +29,10 @@ function LoginScreenContent() {
       if (response.success) {
         router.replace('/(tabs)/home');
       } else {
-        showError(response.error || 'Email ou senha incorretos');
+        showError(response.error || t('auth.login.loginError'));
       }
     } catch (error) {
-      showError('Email ou senha incorretos');
+      showError(t('auth.login.loginError'));
     } finally {
       setLoading(false);
     }
@@ -79,62 +63,7 @@ function LoginScreenContent() {
           <Ionicons name="chevron-back" size={24} color="#333333" />
         </TouchableOpacity>
 
-        <View style={styles.languageContainer}>
-          <TouchableOpacity 
-            style={styles.languageButton}
-            onPress={() => setLanguageDropdownVisible(!languageDropdownVisible)}
-          >
-            <Ionicons name="language-outline" size={24} color="#666666" />
-            <Text style={styles.languageText}>
-              {selectedLanguage === 'pt-BR' ? 'PT' : selectedLanguage === 'en' ? 'EN' : 'ES'}
-            </Text>
-            <Ionicons 
-              name={languageDropdownVisible ? "chevron-up" : "chevron-down"} 
-              size={16} 
-              color="#666666" 
-            />
-          </TouchableOpacity>
-          
-          {languageDropdownVisible && (
-            <View style={styles.languageDropdown}>
-              <TouchableOpacity 
-                style={[styles.languageOption, selectedLanguage === 'pt-BR' && styles.languageOptionActive]}
-                onPress={() => {
-                  setSelectedLanguage('pt-BR');
-                  setLanguageDropdownVisible(false);
-                }}
-              >
-                <Text style={[styles.languageOptionText, selectedLanguage === 'pt-BR' && styles.languageOptionTextActive]}>
-                  Português
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.languageOption, selectedLanguage === 'en' && styles.languageOptionActive]}
-                onPress={() => {
-                  setSelectedLanguage('en');
-                  setLanguageDropdownVisible(false);
-                }}
-              >
-                <Text style={[styles.languageOptionText, selectedLanguage === 'en' && styles.languageOptionTextActive]}>
-                  English
-                </Text>
-              </TouchableOpacity>
-              
-                              <TouchableOpacity 
-                  style={[styles.languageOption, selectedLanguage === 'es' && styles.languageOptionActive, { borderBottomWidth: 0 }]}
-                  onPress={() => {
-                    setSelectedLanguage('es');
-                    setLanguageDropdownVisible(false);
-                  }}
-                >
-                  <Text style={[styles.languageOptionText, selectedLanguage === 'es' && styles.languageOptionTextActive]}>
-                    Español
-                  </Text>
-                </TouchableOpacity>
-            </View>
-          )}
-        </View>
+
       </View>
       
       <ScrollView 
@@ -150,10 +79,10 @@ function LoginScreenContent() {
             resizeMode="contain"
           />
           <Text style={styles.welcomeBackText}>
-            Bem-vinda de volta!
+            {t('auth.login.title')}
           </Text>
           <Text style={styles.subtitleText}>
-            Entre na sua conta para continuar
+            {t('auth.welcome.subtitle')}
           </Text>
         </View>
 
@@ -161,8 +90,8 @@ function LoginScreenContent() {
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
             <Input
-              label="Email"
-              placeholder="Digite seu email"
+              label={t('auth.login.email')}
+              placeholder={t('auth.login.email')}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -170,23 +99,23 @@ function LoginScreenContent() {
             />
 
             <Input
-              label="Senha"
-              placeholder="Digite sua senha"
+              label={t('auth.login.password')}
+              placeholder={t('auth.login.password')}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
             />
           </View>
 
-          <TouchableOpacity style={styles.forgotPassword}>
+          <TouchableOpacity style={styles.forgotPassword} onPress={() => router.push('/auth/forgot-password' as any)}>
             <Text style={styles.forgotPasswordText}>
-              Esqueceu a senha?
+              {t('auth.login.forgotPassword')}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.buttonContainer}>
             <Button
-              title="Entrar"
+              title={t('auth.login.loginButton')}
               onPress={handleLogin}
               loading={loading}
               variant="primary"
@@ -199,12 +128,14 @@ function LoginScreenContent() {
             </Text>
             <TouchableOpacity onPress={navigateToSignUp}>
               <Text style={styles.signUpLink}>
-                Registre-se agora
+                {t('auth.welcome.signup')}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
+      
+
     </SafeAreaView>
   );
 }
@@ -238,57 +169,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  languageContainer: {
-    position: 'relative',
-    zIndex: 9999,
-  },
-  languageButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  languageText: {
-    marginHorizontal: 8,
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333333',
-  },
-  languageDropdown: {
-    position: 'absolute',
-    top: 40,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 10,
-    zIndex: 9999,
-    minWidth: 140,
-  },
-  languageOption: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  languageOptionActive: {
-    backgroundColor: '#E0E0E0',
-  },
-  languageOptionText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#333333',
-  },
-  languageOptionTextActive: {
-    color: '#4A90E2',
-  },
+
   scrollView: {
     flex: 1,
   },

@@ -1,37 +1,38 @@
+import { Toast } from '@/components/Toast/Toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
+import { useToast } from '@/hooks/useToast';
+import { favoritesService, supabase, userProfilesService } from '@/services';
+import { Ionicons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
   Alert,
-  TextInput,
-  Modal,
   Animated,
-  PanResponder,
   Dimensions,
   FlatList,
+  Image,
+  Modal,
+  PanResponder,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@/contexts/AuthContext';
-import { router } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import { userProfilesService, favoritesService } from '@/services';
-import { supabase } from '@/services';
-import { useToast } from '@/hooks/useToast';
-import { Toast } from '@/components/Toast/Toast';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as FileSystem from 'expo-file-system';
 import * as Animatable from 'react-native-animatable';
 
 const { height: screenHeight } = Dimensions.get('window');
 
 export default function PerfilScreen() {
   const { user, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState('Favoritos');
+  const { t } = useI18n();
+  const [activeTab, setActiveTab] = useState(t('tabs.perfil.tabs.favorites'));
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [favorites, setFavorites] = useState<any[]>([]);
@@ -104,7 +105,8 @@ export default function PerfilScreen() {
   });
 
   const loadProfile = async () => {
-    const data = await userProfilesService.getUserProfile(user!.id);
+    if (!user?.id) return;
+    const data = await userProfilesService.getUserProfile(user.id);
     setProfile(data);
     setEditFullName(data?.full_name || '');
     setEditBio(data?.bio || '');
@@ -115,11 +117,13 @@ export default function PerfilScreen() {
   };
 
   const loadFavorites = async () => {
+    if (!user?.id) return;
+    
     try {
       setLoadingFavorites(true);
       
       // Carregar favoritos
-      const favoritesResponse = await favoritesService.getUserFavorites(user!.id);
+      const favoritesResponse = await favoritesService.getUserFavorites(user.id);
       if (favoritesResponse.success) {
         setFavorites(favoritesResponse.data);
       } else {
@@ -128,7 +132,7 @@ export default function PerfilScreen() {
       }
 
       // Carregar contagem de favoritos
-      const countResponse = await favoritesService.getFavoritesCount(user!.id);
+      const countResponse = await favoritesService.getFavoritesCount(user.id);
       if (countResponse.success) {
         setFavoritesCount(countResponse.count);
       } else {
@@ -154,14 +158,14 @@ export default function PerfilScreen() {
         // Remover do estado local
         setFavorites(prev => prev.filter(fav => fav.look_id !== lookId));
         setFavoritesCount(prev => prev - 1);
-        showSuccess('Removido dos favoritos!');
+        showSuccess(t('tabs.perfil.favoriteRemoved'));
       } else {
         console.error('Erro ao remover favorito:', result.error);
-        showError('Erro ao remover dos favoritos');
+        showError(t('tabs.perfil.errorRemovingFavorite'));
       }
     } catch (error) {
       console.error('Erro ao remover favorito:', error);
-      showError('Erro ao remover dos favoritos');
+      showError(t('tabs.perfil.errorRemovingFavorite'));
     }
   };
 
@@ -210,7 +214,7 @@ export default function PerfilScreen() {
   const openImagePicker = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'É necessário permitir o acesso às fotos para escolher uma imagem.');
+      Alert.alert(t('tabs.perfil.permissionRequired'), t('tabs.perfil.permissionMessage'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -233,7 +237,7 @@ export default function PerfilScreen() {
       const response = await fetch(fileUri);
       const blob = await response.blob();
       const fileExt = uri.split('.').pop()?.split('?')[0] || 'jpg';
-      const fileName = `${user!.id}_avatar.${fileExt}`;
+      const fileName = `${user?.id || 'user'}_avatar.${fileExt}`;
       const filePath = `foto_perfil/${fileName}`;
       const { data, error } = await supabase.storage
         .from('user-uploads')
@@ -249,12 +253,14 @@ export default function PerfilScreen() {
   };
 
   const handleSaveProfile = async () => {
+    if (!user?.id) return;
+    
     let avatarUrl = profile?.avatar_url || null;
     try {
       if (editAvatar && editAvatar !== profile?.avatar_url && !editAvatar.startsWith('http')) {
         avatarUrl = await uploadAvatar(editAvatar);
       }
-      const updated = await userProfilesService.updateUserProfile(user!.id, {
+      const updated = await userProfilesService.updateUserProfile(user.id, {
         full_name: editFullName,
         bio: editBio,
         avatar_url: avatarUrl,
@@ -263,15 +269,15 @@ export default function PerfilScreen() {
         instagram_link: editInstagram,
       });
       setProfile(updated);
-      showSuccess('Perfil atualizado com sucesso!');
+      showSuccess(t('tabs.perfil.profileUpdated'));
       setEditModalVisible(false);
     } catch (e) {
-      showError('Erro ao atualizar perfil. Tente novamente.');
+      showError(t('tabs.perfil.errorUpdating'));
     }
   };
   
   const tabs = [
-    { name: 'Favoritos', count: `(${favoritesCount})`, icon: 'heart-outline' }
+    { name: t('tabs.perfil.tabs.favorites'), count: `(${favoritesCount})`, icon: 'heart-outline' }
   ];
   
   // Dados mockados para fallback
@@ -286,12 +292,12 @@ export default function PerfilScreen() {
 
   const handleLogout = async () => {
     Alert.alert(
-      'Sair da conta',
-      'Tem certeza que deseja sair?',
+      t('tabs.perfil.logout.title'),
+      t('tabs.perfil.logout.message'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('tabs.perfil.logout.cancel'), style: 'cancel' },
         {
-          text: 'Sair',
+          text: t('tabs.perfil.logout.confirm'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -329,7 +335,7 @@ export default function PerfilScreen() {
                     style={styles.profileImage}
                   >
                     <Text style={styles.profileImageText}>
-                      {user!.fullName ? user!.fullName.charAt(0).toUpperCase() : user!.email.charAt(0).toUpperCase()}
+                      {user?.fullName ? user.fullName.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'F'}
                     </Text>
                   </LinearGradient>
                 )}
@@ -337,10 +343,10 @@ export default function PerfilScreen() {
               </View>
               
               <Text style={styles.profileName}>
-                {profile?.full_name || user!.fullName || 'Finder'}
+                {profile?.full_name || user?.fullName || 'Finder'}
               </Text>
               <Text style={styles.profileBio}>
-                {profile?.bio || 'Apaixonada por moda e estilo ✨'}
+                {profile?.bio || t('tabs.perfil.defaultBio')}
               </Text>
               
               {profile?.location && (
@@ -354,7 +360,7 @@ export default function PerfilScreen() {
               <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
                   <Text style={styles.statNumber}>{favoritesCount}</Text>
-                  <Text style={styles.statLabel}>Favoritos</Text>
+                  <Text style={styles.statLabel}>{t('tabs.perfil.favorites')}</Text>
                 </View>
               </View>
 
@@ -362,21 +368,21 @@ export default function PerfilScreen() {
               <View style={styles.actionButtons}>
                 <TouchableOpacity style={styles.editProfileButton} onPress={() => setEditModalVisible(true)}>
                   <Ionicons name="pencil" size={16} color="#FFFFFF" />
-                  <Text style={styles.editProfileText}>Editar Perfil</Text>
+                  <Text style={styles.editProfileText}>{t('tabs.perfil.editProfile')}</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
                   <Ionicons name="log-out-outline" size={16} color="#666666" />
-                  <Text style={styles.logoutButtonText}>Sair</Text>
+                  <Text style={styles.logoutButtonText}>{t('tabs.perfil.logout.confirm')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Tabs melhoradas */}
             <View style={styles.tabsContainer}>
-              {tabs.map((tab, index) => (
+              {tabs.map((tab) => (
                 <TouchableOpacity
-                  key={index}
+                  key={`${tab.name}`}
                   style={[
                     styles.tabButton,
                     activeTab === tab.name && styles.tabButtonActive
@@ -406,19 +412,25 @@ export default function PerfilScreen() {
               >
                 <Ionicons name="sparkles" size={18} color="#FFFFFF" />
               </LinearGradient>
-              <Text style={styles.inspirationText}>SER UMA FINDER É SER TUDO</Text>
+              <Text style={styles.inspirationText}>{t('tabs.home.inspiration')}</Text>
             </View>
 
             {/* Favoritos Grid */}
-            <View style={styles.looksGrid}>
+            <View style={styles.looksGridContainer}>
               {loadingFavorites ? (
                 <View style={styles.loadingContainer}>
                   <Text style={styles.loadingText}>Carregando favoritos...</Text>
                 </View>
               ) : favorites.length > 0 ? (
-                <View style={styles.favoritesGrid}>
-                  {favorites.map((favorite) => renderFavoriteLook({ item: favorite }))}
-                </View>
+                <FlatList
+                  data={favorites}
+                  keyExtractor={(item) => String(item.look_id || item.id)}
+                  renderItem={({ item }) => renderFavoriteLook({ item })}
+                  numColumns={2}
+                  columnWrapperStyle={styles.looksGridRow}
+                  contentContainerStyle={{ paddingBottom: 100 }}
+                  showsVerticalScrollIndicator={false}
+                />
               ) : (
                 <View style={styles.emptyContainer}>
                   <Text style={styles.emptyText}>Nenhum favorito encontrado</Text>
@@ -490,7 +502,7 @@ export default function PerfilScreen() {
                     style={styles.input}
                     value={editFullName}
                     onChangeText={setEditFullName}
-                    placeholder="Seu nome completo"
+                    placeholder={t('tabs.perfil.namePlaceholder')}
                     placeholderTextColor="#999999"
                   />
                 </View>
@@ -501,7 +513,7 @@ export default function PerfilScreen() {
                     style={[styles.input, styles.textArea]}
                     value={editBio}
                     onChangeText={setEditBio}
-                    placeholder="Conte um pouco sobre você..."
+                    placeholder={t('tabs.perfil.bioPlaceholder')}
                     placeholderTextColor="#999999"
                     multiline
                     numberOfLines={3}
@@ -514,7 +526,7 @@ export default function PerfilScreen() {
                     style={styles.input}
                     value={editPhone}
                     onChangeText={setEditPhone}
-                    placeholder="(00) 00000-0000"
+                    placeholder={t('tabs.perfil.phonePlaceholder')}
                     placeholderTextColor="#999999"
                     keyboardType="phone-pad"
                   />
@@ -526,7 +538,7 @@ export default function PerfilScreen() {
                     style={styles.input}
                     value={editLocation}
                     onChangeText={setEditLocation}
-                    placeholder="Sua cidade, estado"
+                    placeholder={t('tabs.perfil.locationPlaceholder')}
                     placeholderTextColor="#999999"
                   />
                 </View>
@@ -537,7 +549,7 @@ export default function PerfilScreen() {
                     style={styles.input}
                     value={editInstagram}
                     onChangeText={setEditInstagram}
-                    placeholder="@seuusuario"
+                    placeholder={t('tabs.perfil.instagramPlaceholder')}
                     placeholderTextColor="#999999"
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -846,25 +858,30 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   looksGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     paddingHorizontal: 16,
     justifyContent: 'space-between',
-    paddingBottom: 30,
+    marginBottom: 16,
+  },
+  looksGridContainer: {
+    paddingHorizontal: 16,
+  },
+  looksGridRow: {
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
   lookItem: {
     width: '48%',
-    marginBottom: 16,
-  },
-  lookTouchable: {
     borderRadius: 16,
     overflow: 'hidden',
-    position: 'relative',
+    backgroundColor: '#F8F9FA',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+  },
+  lookTouchable: {
+    position: 'relative',
   },
   lookImage: {
     width: '100%',

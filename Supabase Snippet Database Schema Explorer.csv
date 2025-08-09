@@ -1,0 +1,101 @@
+table_name,column_name,data_type,is_nullable,column_default
+avisos,id,uuid,NO,uuid_generate_v4()
+avisos,user_id,uuid,YES,null
+avisos,aviso_tipo,character varying,NO,null
+avisos,titulo,character varying,YES,null
+avisos,descricao,text,YES,null
+avisos,ativo,boolean,YES,true
+avisos,mostrado_em,timestamp with time zone,YES,null
+avisos,criado_em,timestamp with time zone,YES,now()
+avisos,atualizado_em,timestamp with time zone,YES,now()
+categories,id,uuid,NO,uuid_generate_v4()
+categories,title,text,NO,null
+categories,type,text,NO,null
+categories,image_url,text,YES,null
+chat_analytics,id,uuid,NO,gen_random_uuid()
+chat_analytics,date,date,YES,CURRENT_DATE
+chat_analytics,total_messages,integer,YES,0
+chat_analytics,total_users,integer,YES,0
+chat_analytics,total_sessions,integer,YES,0
+chat_analytics,total_look_searches,integer,YES,0
+chat_analytics,total_looks_shown,integer,YES,0
+chat_analytics,avg_response_time,numeric,YES,null
+chat_analytics,error_rate,numeric,YES,0
+chat_analytics,created_at,timestamp with time zone,YES,now()
+chat_messages,id,uuid,NO,gen_random_uuid()
+chat_messages,session_id,uuid,YES,null
+chat_messages,user_id,uuid,YES,null
+chat_messages,message_content,text,NO,null
+chat_messages,is_user_message,boolean,NO,null
+chat_messages,search_terms,ARRAY,YES,null
+chat_messages,looks_shown,integer,YES,0
+chat_messages,look_ids,ARRAY,YES,null
+chat_messages,ai_response_time,integer,YES,null
+chat_messages,status,text,YES,'sent'::text
+chat_messages,error_message,text,YES,null
+chat_messages,metadata,jsonb,YES,'{}'::jsonb
+chat_messages,created_at,timestamp with time zone,YES,now()
+chat_sessions,id,uuid,NO,gen_random_uuid()
+chat_sessions,user_id,uuid,YES,null
+chat_sessions,session_title,text,YES,'Nova Conversa'::text
+chat_sessions,started_at,timestamp with time zone,YES,now()
+chat_sessions,last_activity,timestamp with time zone,YES,now()
+chat_sessions,message_count,integer,YES,0
+chat_sessions,is_active,boolean,YES,true
+chat_sessions,metadata,jsonb,YES,'{}'::jsonb
+chat_sessions,created_at,timestamp with time zone,YES,now()
+chat_sessions,updated_at,timestamp with time zone,YES,now()
+coupons,id,uuid,NO,uuid_generate_v4()
+coupons,title,character varying,NO,null
+coupons,code,character varying,NO,null
+coupons,discount,character varying,NO,null
+coupons,description,text,YES,null
+coupons,store_id,uuid,YES,null
+coupons,expiry_date,timestamp with time zone,YES,null
+coupons,active,boolean,YES,true
+coupons,created_at,timestamp with time zone,YES,now()
+coupons,updated_at,timestamp with time zone,YES,now()
+favorites,user_id,uuid,NO,null
+favorites,look_id,uuid,NO,null
+favorites,created_at,timestamp with time zone,YES,now()
+items,id,uuid,NO,uuid_generate_v4()
+items,name,text,NO,null
+items,store,text,YES,null
+items,link,text,YES,null
+items,look_id,uuid,YES,null
+look_tags,look_id,uuid,NO,null
+look_tags,tag_id,uuid,NO,null
+looks,id,uuid,NO,uuid_generate_v4()
+looks,title,text,NO,null
+looks,description,text,YES,null
+looks,image_url,text,YES,null
+looks,created_at,timestamp with time zone,YES,now()
+looks,created_by,uuid,YES,null
+looks,categories_id,uuid,YES,null
+looks,subcategorias_id,uuid,YES,null
+profiles,id,uuid,NO,null
+profiles,name,text,YES,null
+profiles,avatar_url,text,YES,null
+profiles,created_at,timestamp with time zone,YES,now()
+profiles,updated_at,timestamp with time zone,YES,now()
+profiles,user_type,character varying,YES,'standard'::character varying
+stores,id,uuid,NO,uuid_generate_v4()
+stores,name,character varying,NO,null
+stores,logo_url,text,YES,null
+stores,category,character varying,YES,null
+stores,description,text,YES,null
+stores,active,boolean,YES,true
+stores,created_at,timestamp with time zone,YES,now()
+stores,updated_at,timestamp with time zone,YES,now()
+stores,website_url,text,YES,null
+subcategorias,id,uuid,NO,uuid_generate_v4()
+subcategorias,title,text,NO,null
+subcategorias,type,text,NO,null
+subcategorias,image_url,text,YES,null
+subcategorias,categoria_id,uuid,NO,null
+tags,id,uuid,NO,uuid_generate_v4()
+tags,name,text,NO,null
+user_chat_limits,id,uuid,NO,gen_random_uuid()
+user_chat_limits,user_id,uuid,YES,null
+user_chat_limits,daily_message_count,integer,YES,0
+user_chat_limits,max_daily_messages,integer,YES,10

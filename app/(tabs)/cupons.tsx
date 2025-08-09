@@ -1,21 +1,22 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { usePreloader } from '@/contexts/PreloaderContext';
-import { cuponsService, CupomWithStore, Store } from '@/services';
+import { CupomWithStore, cuponsService, Store } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState, useEffect } from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  FlatList,
-  RefreshControl,
-  Image,
-  Alert,
-  Linking,
-} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useState } from 'react';
+import {
+    Alert,
+    FlatList,
+    Image,
+    Linking,
+    RefreshControl,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 // Interface para compatibilidade com dados do banco
 interface CouponItem extends CupomWithStore {
@@ -24,6 +25,7 @@ interface CouponItem extends CupomWithStore {
 
 export default function CuponsScreen() {
   const { user } = useAuth();
+  const { t, currentLanguage } = useI18n();
   const { showPreloader, hidePreloader } = usePreloader();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('todos');
@@ -35,8 +37,8 @@ export default function CuponsScreen() {
   const mockCoupons: CouponItem[] = [
     {
       id: '1',
-      title: 'Fashion Store',
-      description: 'Desconto especial em toda a coleção de vestidos',
+      title: t('tabs.cupons.items.fashionStore.title'),
+      description: t('tabs.cupons.items.fashionStore.description'),
       code: 'FASHION20',
       discount: 20,
       store_id: '1',
@@ -47,9 +49,9 @@ export default function CuponsScreen() {
       isUsed: false,
       store: {
         id: '1',
-        name: 'Fashion Store',
-        category: 'Vestuário',
-        description: 'Loja de moda',
+        name: t('tabs.cupons.stores.fashionStore'),
+        category: t('tabs.cupons.categories.clothing'),
+        description: t('tabs.cupons.stores.fashionStoreDescription'),
         website_url: 'https://fashionstore.com',
         active: true,
         created_at: '2024-01-01T00:00:00Z',
@@ -58,8 +60,8 @@ export default function CuponsScreen() {
     },
     {
       id: '2',
-      title: 'Sports Shop',
-      description: 'Desconto em calçados esportivos e acessórios',
+      title: t('tabs.cupons.items.sportsShop.title'),
+      description: t('tabs.cupons.items.sportsShop.description'),
       code: 'SPORTS15',
       discount: 15,
       store_id: '2',
@@ -70,9 +72,9 @@ export default function CuponsScreen() {
       isUsed: false,
       store: {
         id: '2',
-        name: 'Sports Shop',
-        category: 'Sapatos',
-        description: 'Loja de esportes',
+        name: t('tabs.cupons.stores.sportsShop'),
+        category: t('tabs.cupons.categories.shoes'),
+        description: t('tabs.cupons.stores.sportsShopDescription'),
         website_url: 'https://sportsshop.com',
         active: true,
         created_at: '2024-01-01T00:00:00Z',
@@ -81,8 +83,8 @@ export default function CuponsScreen() {
     },
     {
       id: '3',
-      title: 'Beauty Store',
-      description: 'Desconto em produtos de beleza e cosméticos',
+      title: t('tabs.cupons.items.beautyStore.title'),
+      description: t('tabs.cupons.items.beautyStore.description'),
       code: 'BEAUTY25',
       discount: 25,
       store_id: '3',
@@ -93,33 +95,10 @@ export default function CuponsScreen() {
       isUsed: true,
       store: {
         id: '3',
-        name: 'Beauty Store',
-        category: 'Cosmético',
-        description: 'Loja de beleza',
+        name: t('tabs.cupons.stores.beautyStore'),
+        category: t('tabs.cupons.categories.cosmetics'),
+        description: t('tabs.cupons.stores.beautyStoreDescription'),
         website_url: 'https://beautystore.com',
-        active: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-      },
-    },
-    {
-      id: '4',
-      title: 'Tech Store',
-      description: 'Desconto em eletrônicos e gadgets',
-      code: 'TECH10',
-      discount: 10,
-      store_id: '4',
-      expiry_date: '2025-03-10T23:59:59Z',
-      active: true,
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-      isUsed: false,
-      store: {
-        id: '4',
-        name: 'Tech Store',
-        category: 'Bolsas',
-        description: 'Loja de tecnologia',
-        website_url: 'https://techstore.com',
         active: true,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
@@ -128,7 +107,7 @@ export default function CuponsScreen() {
   ];
 
   const [categories, setCategories] = useState([
-    { id: 'todos', title: 'Todos' },
+    { id: 'todos', title: t('tabs.cupons.categories.all') },
   ]);
 
   // Carregar categorias das lojas
@@ -140,7 +119,7 @@ export default function CuponsScreen() {
         const uniqueCategories = [...new Set(storesResponse.data.map(store => store.category))];
         
         const categoryOptions = [
-          { id: 'todos', title: 'Todos' },
+          { id: 'todos', title: t('tabs.cupons.categories.all') },
           ...uniqueCategories.map(category => ({
             id: category,
             title: category
@@ -153,16 +132,16 @@ export default function CuponsScreen() {
       console.error('Erro ao carregar categorias:', error);
       // Manter categorias padrão em caso de erro
       setCategories([
-        { id: 'todos', title: 'Todos' },
-        { id: 'Vestuário', title: 'Vestuário' },
-        { id: 'Roupas de couro', title: 'Roupas de couro' },
-        { id: 'Moda Praia', title: 'Moda Praia' },
-        { id: 'Sapatos', title: 'Sapatos' },
-        { id: 'Bolsas', title: 'Bolsas' },
-        { id: 'Second Hand', title: 'Second Hand' },
-        { id: 'Cosmético', title: 'Cosmético' },
-        { id: 'Nutricionista', title: 'Nutricionista' },
-        { id: 'Velas', title: 'Velas' },
+        { id: 'todos', title: t('tabs.cupons.categories.all') },
+        { id: t('tabs.cupons.categories.clothing'), title: t('tabs.cupons.categories.clothing') },
+        { id: t('tabs.cupons.categories.leather'), title: t('tabs.cupons.categories.leather') },
+        { id: t('tabs.cupons.categories.beachwear'), title: t('tabs.cupons.categories.beachwear') },
+        { id: t('tabs.cupons.categories.shoes'), title: t('tabs.cupons.categories.shoes') },
+        { id: t('tabs.cupons.categories.bags'), title: t('tabs.cupons.categories.bags') },
+        { id: t('tabs.cupons.categories.secondHand'), title: t('tabs.cupons.categories.secondHand') },
+        { id: t('tabs.cupons.categories.cosmetics'), title: t('tabs.cupons.categories.cosmetics') },
+        { id: t('tabs.cupons.categories.nutritionist'), title: t('tabs.cupons.categories.nutritionist') },
+        { id: t('tabs.cupons.categories.candles'), title: t('tabs.cupons.categories.candles') },
       ]);
     }
   };
@@ -188,13 +167,13 @@ export default function CuponsScreen() {
         }));
         setCupons(cuponsWithUsage);
       } else {
-        setError(response.error || 'Erro ao carregar cupons');
+        setError(response.error || t('tabs.cupons.error.loadCoupons'));
         // Usar dados mockados como fallback
         setCupons(mockCoupons);
       }
     } catch (error) {
       console.error('Erro ao carregar cupons:', error);
-      setError('Erro de conexão');
+      setError(t('tabs.cupons.error.connection'));
       // Usar dados mockados como fallback
       setCupons(mockCoupons);
     } finally {
@@ -224,9 +203,9 @@ export default function CuponsScreen() {
   const handleCopyCode = (code: string) => {
     // Implementar cópia do código
     Alert.alert(
-      'Código Copiado!',
-      `O código "${code}" foi copiado para a área de transferência.`,
-      [{ text: 'OK' }]
+      t('tabs.cupons.alert.codeCopiedTitle'),
+      `${t('tabs.cupons.alert.codeCopiedMessage')} "${code}"`,
+      [{ text: t('tabs.cupons.alert.ok') }]
     );
     console.log('Copiando código:', code);
   };
@@ -234,17 +213,17 @@ export default function CuponsScreen() {
   const handleUseCoupon = (coupon: CouponItem) => {
     // Implementar uso do cupom
     Alert.alert(
-      'Usar Cupom',
-      `Deseja usar o cupom "${coupon.title}" com código "${coupon.code}"?`,
+      t('tabs.cupons.alert.useCouponTitle'),
+      `${t('tabs.cupons.alert.useCouponMessage')} "${coupon.title}" com código "${coupon.code}"?`,
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('tabs.cupons.alert.cancel'), style: 'cancel' },
         { 
-          text: 'Usar', 
+          text: t('tabs.cupons.alert.use'), 
           onPress: () => {
             Alert.alert(
-              'Cupom Usado!',
-              `O cupom "${coupon.title}" foi ativado com sucesso!`,
-              [{ text: 'OK' }]
+              t('tabs.cupons.alert.couponUsedTitle'),
+              `${t('tabs.cupons.alert.couponUsedMessage')} "${coupon.title}"`,
+              [{ text: t('tabs.cupons.alert.ok') }]
             );
           }
         }
@@ -256,18 +235,18 @@ export default function CuponsScreen() {
   const handleOpenStoreWebsite = (store: Store) => {
     if (store.website_url) {
       Alert.alert(
-        'Abrir Website',
-        `Deseja abrir o website da ${store.name}?`,
+        t('tabs.cupons.alert.openWebsiteTitle'),
+        `${t('tabs.cupons.alert.openWebsiteMessage')} ${store.name}?`,
         [
-          { text: 'Cancelar', style: 'cancel' },
+          { text: t('tabs.cupons.alert.cancel'), style: 'cancel' },
           {
-            text: 'Abrir',
+            text: t('tabs.cupons.alert.open'),
             onPress: () => {
               Linking.openURL(store.website_url!).catch(() => {
                 Alert.alert(
-                  'Erro',
-                  'Não foi possível abrir o website da loja.',
-                  [{ text: 'OK' }]
+                  t('tabs.cupons.alert.error'),
+                  t('tabs.cupons.alert.websiteError'),
+                  [{ text: t('tabs.cupons.alert.ok') }]
                 );
               });
             }
@@ -276,23 +255,36 @@ export default function CuponsScreen() {
       );
     } else {
       Alert.alert(
-        'Website Indisponível',
-        'Esta loja não possui website cadastrado.',
-        [{ text: 'OK' }]
+        t('tabs.cupons.alert.websiteUnavailableTitle'),
+        t('tabs.cupons.alert.websiteUnavailableMessage'),
+        [{ text: t('tabs.cupons.alert.ok') }]
       );
     }
   };
 
   const renderCouponItem = ({ item }: { item: CouponItem }) => {
-    // Formatar data de expiração
+    // Formatar data de expiração conforme idioma atual
+    const resolveLocale = (lang: string) => {
+      switch (lang) {
+        case 'pt-br':
+          return 'pt-BR';
+        case 'en-us':
+          return 'en-US';
+        case 'es':
+          return 'es-ES';
+        default:
+          return 'pt-BR';
+      }
+    };
+
     const formatDate = (dateString: string) => {
       const date = new Date(dateString);
-      return date.toLocaleDateString('pt-BR');
+      return date.toLocaleDateString(resolveLocale(currentLanguage));
     };
 
     // Formatar desconto
     const formatDiscount = (discount: number) => {
-      return `${discount}% OFF`;
+      return `${discount}% ${t('tabs.cupons.discount')}`;
     };
 
     return (
@@ -329,7 +321,7 @@ export default function CuponsScreen() {
 
             <View style={styles.codeContainer}>
               <Text style={[styles.codeLabel, item.isUsed && styles.codeLabelUsed]}>
-                CÓDIGO:
+                {t('tabs.cupons.codeLabel')}
               </Text>
               <View style={styles.codeRow}>
                 <Text style={[styles.codeText, item.isUsed && styles.codeTextUsed]}>
@@ -353,22 +345,22 @@ export default function CuponsScreen() {
                 disabled={item.isUsed}
               >
                               <Text style={[styles.storeName, item.isUsed && styles.storeNameUsed]}>
-                {item.store?.name || 'Loja'}
+                {item.store?.name || t('tabs.cupons.storeNameDefault')}
               </Text>
               </TouchableOpacity>
               <Text style={[styles.validUntil, item.isUsed && styles.validUntilUsed]}>
-                Válido até: {formatDate(item.expiry_date)}
+                {t('tabs.cupons.validUntil')}: {formatDate(item.expiry_date)}
               </Text>
             </View>
               
               {!item.isUsed ? (
                 <TouchableOpacity style={styles.useButton}>
-                  <Text style={styles.useButtonText}>Usar Cupom</Text>
+                  <Text style={styles.useButtonText}>{t('tabs.cupons.useButtonText')}</Text>
                   <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
               ) : (
                 <View style={styles.usedBadge}>
-                  <Text style={styles.usedBadgeText}>Usado</Text>
+                  <Text style={styles.usedBadgeText}>{t('tabs.cupons.usedBadgeText')}</Text>
                 </View>
               )}
             </View>
@@ -406,12 +398,12 @@ export default function CuponsScreen() {
       >
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.title}>CUPONS</Text>
-            {user && (
-              <Text style={styles.welcomeUser}>
-                Economize em suas compras, {user.fullName?.split(' ')[0] || 'Finder'}!
-              </Text>
-            )}
+            <Text style={styles.title}>{t('tabs.cupons.title')}</Text>
+                          {user && (
+                <Text style={styles.welcomeUser}>
+                  {t('tabs.cupons.welcomeUser')} {user.fullName?.split(' ')[0] || t('tabs.cupons.finder')}!
+                </Text>
+              )}
           </View>
         </View>
       </LinearGradient>
@@ -446,7 +438,7 @@ export default function CuponsScreen() {
         ListEmptyComponent={
           loading ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Carregando cupons...</Text>
+              <Text style={styles.emptyText}>{t('tabs.cupons.loadingCoupons')}</Text>
             </View>
           ) : error ? (
             <View style={styles.emptyContainer}>
@@ -454,7 +446,7 @@ export default function CuponsScreen() {
             </View>
           ) : (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Nenhum cupom encontrado</Text>
+              <Text style={styles.emptyText}>{t('tabs.cupons.noCouponsFound')}</Text>
             </View>
           )
         }

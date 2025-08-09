@@ -4,21 +4,23 @@ import '../polyfills';
 // import '../global.css';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { GlobalLanguageSelector, GlobalPreloader } from '@/components';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { TabBarVisibilityProvider } from '@/contexts/TabBarVisibilityContext';
+import { I18nProvider } from '@/contexts/I18nContext';
 import { PreloaderProvider } from '@/contexts/PreloaderContext';
-import { GlobalPreloader } from '@/components';
+import { TabBarVisibilityProvider } from '@/contexts/TabBarVisibilityContext';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const pathname = usePathname();
 
   if (!loaded) {
     // Async font loading only occurs in development.
@@ -26,21 +28,26 @@ export default function RootLayout() {
   }
 
   return (
-    <PreloaderProvider>
-      <TabBarVisibilityProvider>
-        <AuthProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" options={{ headerShown: false }} />
-              <Stack.Screen name="auth" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="light" translucent backgroundColor="transparent" hidden />
-            <GlobalPreloader />
-          </ThemeProvider>
-        </AuthProvider>
-      </TabBarVisibilityProvider>
-    </PreloaderProvider>
+    <I18nProvider>
+      <PreloaderProvider>
+        <TabBarVisibilityProvider>
+          <AuthProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="auth" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="light" translucent backgroundColor="transparent" hidden />
+              <GlobalPreloader />
+              {pathname && (pathname === '/(tabs)/home' || pathname.endsWith('/home')) && (
+                <GlobalLanguageSelector />
+              )}
+            </ThemeProvider>
+          </AuthProvider>
+        </TabBarVisibilityProvider>
+      </PreloaderProvider>
+    </I18nProvider>
   );
 }

@@ -1,0 +1,371 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "close": "Fechar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "refresh": "Atualizar",
+    "retry": "Tentar novamente",
+    "noData": "Nenhum dado encontrado",
+    "language": "Idioma",
+    "settings": "Configurações",
+    "profile": "Perfil",
+    "logout": "Sair",
+    "login": "Entrar",
+    "signup": "Cadastrar",
+    "welcome": "Bem-vindo"
+  },
+  "auth": {
+    "welcome": {
+      "title": "Bem-vindo ao LookFinder",
+      "subtitle": "Descubra seu estilo com IA",
+      "description": "Encontre looks incríveis personalizados para você com a ajuda da inteligência artificial",
+      "getStarted": "Começar",
+      "alreadyHaveAccount": "Já tem uma conta?",
+      "login": "Entrar",
+      "dontHaveAccount": "Não tem uma conta?",
+      "signup": "Cadastrar"
+    },
+    "login": {
+      "title": "Entrar",
+      "email": "E-mail",
+      "password": "Senha",
+      "forgotPassword": "Esqueceu a senha?",
+      "loginButton": "Entrar",
+      "or": "ou",
+      "loginWithGoogle": "Entrar com Google",
+      "loginWithApple": "Entrar com Apple",
+      "dontHaveAccount": "Não tem uma conta?",
+      "signup": "Cadastrar",
+      "emailRequired": "E-mail é obrigatório",
+      "passwordRequired": "Senha é obrigatória",
+      "invalidEmail": "E-mail inválido",
+      "loginError": "Erro ao fazer login",
+      "loginSuccess": "Login realizado com sucesso"
+    },
+    "signup": {
+      "title": "Criar Conta",
+      "name": "Nome",
+      "email": "E-mail",
+      "password": "Senha",
+      "confirmPassword": "Confirmar Senha",
+      "signupButton": "Cadastrar",
+      "or": "ou",
+      "signupWithGoogle": "Cadastrar com Google",
+      "signupWithApple": "Cadastrar com Apple",
+      "alreadyHaveAccount": "Já tem uma conta?",
+      "login": "Entrar",
+      "nameRequired": "Nome é obrigatório",
+      "emailRequired": "E-mail é obrigatório",
+      "passwordRequired": "Senha é obrigatória",
+      "confirmPasswordRequired": "Confirmação de senha é obrigatória",
+      "invalidEmail": "E-mail inválido",
+      "passwordMismatch": "Senhas não coincidem",
+      "passwordMinLength": "Senha deve ter pelo menos 6 caracteres",
+      "signupError": "Erro ao criar conta",
+      "signupSuccess": "Conta criada com sucesso"
+    }
+  },
+  "tabs": {
+    "home": {
+      "title": "Início",
+      "welcome": "Bem-vindo",
+      "discoverLooks": "Descubra looks incríveis",
+      "trending": "Tendências",
+      "recent": "Recentes",
+      "favorites": "Favoritos",
+      "categories": "Categorias",
+      "allCategories": "Todas as categorias",
+      "viewAll": "Ver todos",
+      "noLooks": "Nenhum look encontrado",
+      "loadMore": "Carregar mais",
+      "searchPlaceholder": "Buscar looks...",
+      "filterByCategory": "Filtrar por categoria",
+      "sortBy": "Ordenar por",
+      "sortOptions": {
+        "newest": "Mais recentes",
+        "oldest": "Mais antigos",
+        "popular": "Mais populares",
+        "name": "Nome A-Z"
+      },
+      "inspiration": "SER UMA FINDER É SER TUDO"
+    },
+    "chat": {
+      "title": "Chat IA",
+      "newChat": "Nova conversa",
+      "placeholder": "Digite sua mensagem...",
+      "send": "Enviar",
+      "thinking": "Pensando...",
+      "error": "Erro ao enviar mensagem",
+      "retry": "Tentar novamente",
+      "clearChat": "Limpar conversa",
+      "suggestions": "Sugestões",
+      "suggestionsList": [
+        "Mostre-me looks casuais",
+        "Preciso de um look para festa",
+        "Quero roupas para trabalho",
+        "Sugestões para o fim de semana"
+      ],
+      "dailyLimit": "Limite diário atingido",
+      "dailyLimitMessage": "Você atingiu o limite de mensagens diárias. Tente novamente amanhã.",
+      "sessionTitle": "Nova Conversa",
+      "noMessages": "Nenhuma mensagem ainda",
+      "startConversation": "Comece uma conversa com a IA",
+      "welcomeMessage": "Olá! Sou sua IA Finder, assistente de moda pessoal do LookFinder. Como posso te ajudar hoje?",
+      "aiName": "IA Finder",
+      "aiStatus": "Online • Especialista em estilo",
+      "suggestionsTitle": "Perguntas rápidas:",
+      "inputPlaceholder": "Pergunte sobre moda, estilo, looks...",
+      "historyTitle": "Histórico de Conversas",
+      "emptyHistoryText": "Nenhuma conversa ainda",
+      "emptyHistorySubtext": "Suas conversas com a IA Finder aparecerão aqui"
+    },
+    "cupons": {
+      "title": "Cupons",
+      "available": "Cupons disponíveis",
+      "expired": "Cupons expirados",
+      "used": "Cupons usados",
+      "noCoupons": "Nenhum cupom disponível",
+      "copyCode": "Copiar código",
+      "codeCopied": "Código copiado!",
+      "expiresIn": "Expira em",
+      "days": "dias",
+      "hours": "horas",
+      "minutes": "minutos",
+      "expiredOn": "Expirado em",
+      "discount": "Desconto",
+      "description": "Descrição",
+      "store": "Loja",
+      "website": "Website",
+      "applyCoupon": "Aplicar cupom",
+      "couponApplied": "Cupom aplicado!",
+      "errorApplying": "Erro ao aplicar cupom",
+      "welcomeUser": "Economize em suas compras",
+      "finder": "Finder",
+      "loadingCoupons": "Carregando cupons...",
+      "noCouponsFound": "Nenhum cupom encontrado",
+      "categories": {
+        "all": "Todos",
+        "clothing": "Vestuário",
+        "leather": "Roupas de couro",
+        "beachwear": "Moda Praia",
+        "shoes": "Sapatos",
+        "bags": "Bolsas",
+        "secondHand": "Second Hand",
+        "cosmetics": "Cosmético",
+        "nutritionist": "Nutricionista",
+        "candles": "Velas"
+      },
+      "items": {
+        "fashionStore": {
+          "title": "Fashion Store",
+          "description": "Desconto especial em toda a coleção de vestidos"
+        },
+        "sportsShop": {
+          "title": "Sports Shop",
+          "description": "Desconto em calçados esportivos e acessórios"
+        },
+        "beautyStore": {
+          "title": "Beauty Store",
+          "description": "Desconto em produtos de beleza e cosméticos"
+        }
+      },
+      "stores": {
+        "fashionStore": "Fashion Store",
+        "fashionStoreDescription": "Loja de moda",
+        "sportsShop": "Sports Shop",
+        "sportsShopDescription": "Loja de esportes",
+        "beautyStore": "Beauty Store",
+        "beautyStoreDescription": "Loja de beleza"
+      },
+      "error": {
+        "loadCoupons": "Erro ao carregar cupons",
+        "connection": "Erro de conexão"
+      },
+      "alert": {
+        "codeCopiedTitle": "Código Copiado!",
+        "codeCopiedMessage": "O código foi copiado para a área de transferência.",
+        "ok": "OK",
+        "useCouponTitle": "Usar Cupom",
+        "useCouponMessage": "Deseja usar o cupom",
+        "cancel": "Cancelar",
+        "use": "Usar",
+        "couponUsedTitle": "Cupom Usado!",
+        "couponUsedMessage": "O cupom foi ativado com sucesso!",
+        "openWebsiteTitle": "Abrir Website",
+        "openWebsiteMessage": "Deseja abrir o website da",
+        "open": "Abrir",
+        "error": "Erro",
+        "websiteError": "Não foi possível abrir o website da loja.",
+        "websiteUnavailableTitle": "Website Indisponível",
+        "websiteUnavailableMessage": "Esta loja não possui website cadastrado."
+      },
+      "codeLabel": "CÓDIGO:",
+      "storeNameDefault": "Loja",
+      "validUntil": "Válido até",
+      "useButtonText": "Usar Cupom",
+      "usedBadgeText": "Usado"
+    },
+    "links": {
+      "title": "Links",
+      "usefulLinks": "Links úteis",
+      "about": "Sobre",
+      "privacy": "Privacidade",
+      "terms": "Termos",
+      "support": "Suporte",
+      "contact": "Contato",
+      "feedback": "Feedback",
+      "rateApp": "Avaliar app",
+      "shareApp": "Compartilhar app",
+      "version": "Versão",
+      "developedBy": "Desenvolvido por",
+      "allRightsReserved": "Todos os direitos reservados",
+      "categories": {
+        "all": "Todos",
+        "dresses": "Vestidos",
+        "shoes": "Calçados",
+        "accessories": "Acessórios",
+        "blazers": "Blazers"
+      },
+      "items": {
+        "dress": {
+          "title": "Vestido Floral Primavera",
+          "description": "Vestido elegante com estampa floral, perfeito para a primavera"
+        },
+        "shoes": {
+          "title": "Tênis Esportivo Comfort",
+          "description": "Tênis confortável para atividades físicas e uso casual"
+        },
+        "bag": {
+          "title": "Bolsa Transversal Couro",
+          "description": "Bolsa elegante em couro genuíno, ideal para o dia a dia"
+        },
+        "blazer": {
+          "title": "Blazer Feminino Slim",
+          "description": "Blazer moderno e elegante para ocasiões especiais"
+        }
+      },
+      "stores": {
+        "fashionStore": "Fashion Store",
+        "sportsShop": "Sports Shop",
+        "leatherGoods": "Leather Goods",
+        "eleganceFashion": "Elegance Fashion"
+      }
+    },
+    "perfil": {
+      "title": "Perfil",
+      "editProfile": "Editar perfil",
+      "personalInfo": "Informações pessoais",
+      "name": "Nome",
+      "email": "E-mail",
+      "avatar": "Foto de perfil",
+      "changeAvatar": "Alterar foto",
+      "saveChanges": "Salvar alterações",
+      "accountSettings": "Configurações da conta",
+      "notifications": "Notificações",
+      "language": "Idioma",
+      "theme": "Tema",
+      "darkMode": "Modo escuro",
+      "lightMode": "Modo claro",
+      "autoMode": "Automático",
+      "privacy": "Privacidade",
+      "security": "Segurança",
+      "changePassword": "Alterar senha",
+      "currentPassword": "Senha atual",
+      "newPassword": "Nova senha",
+      "confirmNewPassword": "Confirmar nova senha",
+      "deleteAccount": "Excluir conta",
+      "deleteAccountWarning": "Esta ação não pode ser desfeita",
+      "logout": "Sair",
+      "logoutConfirm": "Tem certeza que deseja sair?",
+      "profileUpdated": "Perfil atualizado com sucesso",
+      "passwordChanged": "Senha alterada com sucesso",
+      "errorUpdating": "Erro ao atualizar perfil",
+      "errorChangingPassword": "Erro ao alterar senha",
+      "favorites": "Favoritos",
+      "myLooks": "Meus looks",
+      "chatHistory": "Histórico de chat",
+      "clearHistory": "Limpar histórico",
+      "dataUsage": "Uso de dados",
+      "storageUsed": "Armazenamento usado",
+      "cacheSize": "Tamanho do cache",
+      "clearCache": "Limpar cache",
+      "about": "Sobre",
+      "version": "Versão",
+      "build": "Build",
+      "lastUpdate": "Última atualização",
+      "defaultBio": "Apaixonada por moda e estilo ✨",
+      "tabs": {
+        "favorites": "Favoritos"
+      },
+      "logout": {
+        "title": "Sair da conta",
+        "message": "Tem certeza que deseja sair?",
+        "cancel": "Cancelar",
+        "confirm": "Sair"
+      },
+      "favoriteRemoved": "Removido dos favoritos!",
+      "errorRemovingFavorite": "Erro ao remover dos favoritos",
+      "permissionRequired": "Permissão necessária",
+      "permissionMessage": "É necessário permitir o acesso às fotos para escolher uma imagem.",
+      "namePlaceholder": "Seu nome completo",
+      "bioPlaceholder": "Conte um pouco sobre você...",
+      "phonePlaceholder": "(00) 00000-0000",
+      "locationPlaceholder": "Sua cidade, estado",
+      "instagramPlaceholder": "@seuusuario"
+    }
+  },
+  "components": {
+    "button": {
+      "primary": "Primário",
+      "secondary": "Secundário",
+      "outline": "Contorno",
+      "ghost": "Fantasma",
+      "loading": "Carregando...",
+      "disabled": "Desabilitado"
+    },
+    "input": {
+      "placeholder": "Digite aqui...",
+      "required": "Campo obrigatório",
+      "invalid": "Campo inválido",
+      "minLength": "Mínimo de caracteres",
+      "maxLength": "Máximo de caracteres"
+    },
+    "toast": {
+      "success": "Sucesso!",
+      "error": "Erro!",
+      "warning": "Atenção!",
+      "info": "Informação"
+    },
+    "preloader": {
+      "loading": "Carregando...",
+      "pleaseWait": "Por favor, aguarde..."
+    }
+  },
+  "errors": {
+    "network": "Erro de conexão",
+    "server": "Erro do servidor",
+    "unauthorized": "Não autorizado",
+    "forbidden": "Acesso negado",
+    "notFound": "Não encontrado",
+    "timeout": "Tempo limite excedido",
+    "unknown": "Erro desconhecido",
+    "tryAgain": "Tente novamente",
+    "checkConnection": "Verifique sua conexão"
+  },
+  "languages": {
+    "pt-br": "Português",
+    "en-us": "English",
+    "es": "Español"
+  }
+} 

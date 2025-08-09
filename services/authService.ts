@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { AuthResponse, LoginCredentials, SignUpCredentials, User } from './types/auth';
+import { AuthResponse, LoginCredentials, ResetPasswordRequest, SignUpCredentials, UpdatePasswordRequest, User } from './types/auth';
 
 export interface AuthServiceMethods {
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
@@ -9,6 +9,8 @@ export interface AuthServiceMethods {
   getSession: () => Promise<any>;
   onAuthStateChange: (callback: (event: string, session: any) => void) => any;
   checkConnection: () => Promise<boolean>;
+  requestPasswordReset: (payload: ResetPasswordRequest) => Promise<AuthResponse>;
+  updatePassword: (payload: UpdatePasswordRequest) => Promise<AuthResponse>;
 }
 
 class AuthService implements AuthServiceMethods {
@@ -24,6 +26,43 @@ class AuthService implements AuthServiceMethods {
     }
   }
 
+  /**
+   * Solicita email de recuperação de senha
+   */
+  async requestPasswordReset({ email }: ResetPasswordRequest): Promise<AuthResponse> {
+    try {
+      if (!this.isValidEmail(email)) {
+        return { success: false, error: 'Por favor, insira um email válido.' };
+      }
+      const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase().trim(), {
+        redirectTo: 'lookfindermobile://auth/reset',
+      });
+      if (error) {
+        return { success: false, error: this.getErrorMessage(error.message) };
+      }
+      return { success: true, message: 'Enviamos um email com instruções para redefinir sua senha.' };
+    } catch (error) {
+      return { success: false, error: 'Erro ao solicitar recuperação de senha.' };
+    }
+  }
+
+  /**
+   * Atualiza senha do usuário (após abrir o link mágico ou sessão ativa)
+   */
+  async updatePassword({ newPassword }: UpdatePasswordRequest): Promise<AuthResponse> {
+    try {
+      if (!newPassword || newPassword.length < 6) {
+        return { success: false, error: 'A senha deve ter pelo menos 6 caracteres.' };
+      }
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        return { success: false, error: this.getErrorMessage(error.message) };
+      }
+      return { success: true, message: 'Senha atualizada com sucesso!' };
+    } catch (error) {
+      return { success: false, error: 'Erro ao atualizar senha.' };
+    }
+  }
   /**
    * Realiza login do usuário
    */

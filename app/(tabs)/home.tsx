@@ -1,13 +1,18 @@
-import { Gallery4, Gallery4Item } from '@/components';
+import { Gallery4Item } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { usePreloader } from '@/contexts/PreloaderContext';
-import { categoriesService, favoritesService } from '@/services';
-import { looksService, Look } from '@/services/looksService';
-import { subcategoriesService } from '@/services';
+import { categoriesService, favoritesService, subcategoriesService } from '@/services';
+import { Look, looksService } from '@/services/looksService';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState, useCallback } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  FlatList,
   Image,
+  Modal,
+  Pressable,
   RefreshControl,
   SafeAreaView,
   StyleSheet,
@@ -15,19 +20,14 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  FlatList,
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  Animated,
-  ViewToken,
+  ViewToken
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 
 export default function HomeScreen() {
   const { user } = useAuth();
   const { showPreloader, hidePreloader } = usePreloader();
+  const { t } = useI18n();
   const [categories, setCategories] = useState<Gallery4Item[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [looks, setLooks] = useState<Look[]>([]);
@@ -43,8 +43,6 @@ export default function HomeScreen() {
   const [showSubcategories, setShowSubcategories] = useState(false);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [visibleItems, setVisibleItems] = useState<Set<string>>(new Set());
-  const [languageDropdownVisible, setLanguageDropdownVisible] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('pt-BR');
   const [favoritedLooks, setFavoritedLooks] = useState<Set<string>>(new Set());
   const [selectedLookId, setSelectedLookId] = useState<string | null>(null);
 
@@ -63,22 +61,6 @@ export default function HomeScreen() {
     loadLooks(true);
     loadFavoritedLooks();
   }, []);
-
-  // Fechar dropdown quando clicar fora
-  useEffect(() => {
-    const handlePressOutside = () => {
-      if (languageDropdownVisible) {
-        setLanguageDropdownVisible(false);
-      }
-    };
-
-    // Adicionar listener para fechar dropdown
-    const subscription = { remove: () => {} };
-    
-    return () => {
-      subscription.remove();
-    };
-  }, [languageDropdownVisible]);
 
   useEffect(() => {
     if (selectedSubcategory) {
@@ -335,26 +317,11 @@ export default function HomeScreen() {
               <Text style={styles.title}>LOOKFINDER</Text>
               {user && (
                 <Text style={styles.welcomeUser}>
-                  Olá, {user.fullName?.split(' ')[0] || 'Finder'}! 
+                  {t('tabs.home.welcome')}, {user.fullName?.split(' ')[0] || 'Finder'}! 
                 </Text>
               )}
             </View>
-            <View style={styles.languageContainer}>
-              <TouchableOpacity 
-                style={styles.languageButton}
-                onPress={() => setLanguageDropdownVisible(!languageDropdownVisible)}
-              >
-                <Ionicons name="language-outline" size={24} color="#666666" />
-                <Text style={styles.languageText}>
-                  {selectedLanguage === 'pt-BR' ? 'PT' : selectedLanguage === 'en' ? 'EN' : 'ES'}
-                </Text>
-                <Ionicons 
-                  name={languageDropdownVisible ? "chevron-up" : "chevron-down"} 
-                  size={16} 
-                  color="#666666" 
-                />
-              </TouchableOpacity>
-            </View>
+
           </View>
 
           {/* Barra de busca melhorada */}
@@ -363,7 +330,7 @@ export default function HomeScreen() {
               <Ionicons name="search" size={20} color="#999999" />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Busque looks, estilos, ocasiões..."
+                placeholder={t('tabs.home.searchPlaceholder')}
                 placeholderTextColor="#999999"
               />
             </View>
@@ -376,8 +343,8 @@ export default function HomeScreen() {
 
       {/* Categorias */}
       <View style={styles.categoriesSection}>
-        <FlatList
-          data={[{ id: 'todos', title: 'Todos', description: '', type: '', image_url: '' }, ...categories]}
+                  <FlatList
+            data={[{ id: 'todos', title: t('tabs.home.allCategories'), description: '', type: '', image_url: '' }, ...categories]}
           keyExtractor={(item) => item.id}
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -411,13 +378,13 @@ export default function HomeScreen() {
         <View style={styles.statsContainer}>
           <View style={styles.statsItem}>
             <Text style={styles.statsNumber}>{looks.length}</Text>
-            <Text style={styles.statsLabel}>looks encontrados</Text>
+            <Text style={styles.statsLabel}>{t('tabs.home.noLooks')}</Text>
           </View>
           <View style={styles.inspirationContainer}>
             <View style={styles.inspirationIcon}>
               <Ionicons name="sparkles" size={18} color="#000000" />
             </View>
-            <Text style={styles.inspirationText}>SER UMA FINDER É SER TUDO</Text>
+            <Text style={styles.inspirationText}>{t('tabs.home.inspiration')}</Text>
           </View>
         </View>
       </View>
@@ -507,58 +474,7 @@ export default function HomeScreen() {
         </Pressable>
       </Modal>
 
-      {/* Language Dropdown usando Modal */}
-      <Modal
-        visible={languageDropdownVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setLanguageDropdownVisible(false)}
-      >
-        <Pressable 
-          style={styles.dropdownOverlay} 
-          onPress={() => setLanguageDropdownVisible(false)}
-        >
-          <View style={styles.dropdownContainer}>
-            <View style={styles.languageDropdownModal}>
-              <TouchableOpacity 
-                style={[styles.languageOption, selectedLanguage === 'pt-BR' && styles.languageOptionActive]}
-                onPress={() => {
-                  setSelectedLanguage('pt-BR');
-                  setLanguageDropdownVisible(false);
-                }}
-              >
-                <Text style={[styles.languageOptionText, selectedLanguage === 'pt-BR' && styles.languageOptionTextActive]}>
-                  Português
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.languageOption, selectedLanguage === 'en' && styles.languageOptionActive]}
-                onPress={() => {
-                  setSelectedLanguage('en');
-                  setLanguageDropdownVisible(false);
-                }}
-              >
-                <Text style={[styles.languageOptionText, selectedLanguage === 'en' && styles.languageOptionTextActive]}>
-                  English
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.languageOption, selectedLanguage === 'es' && styles.languageOptionActive, { borderBottomWidth: 0 }]}
-                onPress={() => {
-                  setSelectedLanguage('es');
-                  setLanguageDropdownVisible(false);
-                }}
-              >
-                <Text style={[styles.languageOptionText, selectedLanguage === 'es' && styles.languageOptionTextActive]}>
-                  Español
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -834,81 +750,5 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 20,
   },
-  // Estilos do botão de idiomas
-  languageContainer: {
-    zIndex: 99999,
-  },
-  languageButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    gap: 6,
-  },
-  languageText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666666',
-  },
-  languageDropdown: {
-    position: 'absolute',
-    top: 45,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 20,
-    minWidth: 140,
-    zIndex: 99999,
-  },
-  languageOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F3F5',
-  },
-  languageOptionActive: {
-    backgroundColor: '#F8F9FA',
-  },
-  languageOptionText: {
-    fontSize: 15,
-    color: '#666666',
-    fontWeight: '500',
-  },
-  languageOptionTextActive: {
-    color: '#1a1a1a',
-    fontWeight: '600',
-  },
-  // Estilos para o dropdown modal
-  dropdownOverlay: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  dropdownContainer: {
-    position: 'absolute',
-    top: 120,
-    right: 20,
-    zIndex: 99999,
-  },
-  languageDropdownModal: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 20,
-    minWidth: 140,
-  },
+
 });

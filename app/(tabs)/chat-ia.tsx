@@ -1,21 +1,24 @@
-import React, { useState, useRef, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  Modal,
-  FlatList,
-  Dimensions,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
+import { subscriptionsService } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+    Alert,
+    Dimensions,
+    FlatList,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import * as Animatable from 'react-native-animatable';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -35,10 +38,12 @@ interface ChatHistory {
 }
 
 export default function ChatIAScreen() {
+  const { t } = useI18n();
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Olá! Sou sua IA Finder, assistente de moda pessoal do LookFinder. Como posso te ajudar hoje?',
+      text: t('tabs.chat.welcomeMessage'),
       isUser: false,
       timestamp: new Date(),
     },
@@ -51,12 +56,10 @@ export default function ChatIAScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
 
   const quickSuggestions = [
-    "Como combinar cores?",
-    "Looks para trabalho",
-    "Tendências 2025",
-    "Acessórios essenciais",
-    "Estilo minimalista",
-    "Looks casuais"
+    t('tabs.chat.suggestionsList.0'),
+    t('tabs.chat.suggestionsList.1'),
+    t('tabs.chat.suggestionsList.2'),
+    t('tabs.chat.suggestionsList.3'),
   ];
 
   const fashionResponses = {
@@ -125,6 +128,23 @@ export default function ChatIAScreen() {
     const textToSend = messageText || inputText.trim();
     if (!textToSend) return;
 
+    // Guard de plano: checar limites antes de enviar
+    try {
+      if (user?.id) {
+        const res = await subscriptionsService.getProfileWithPlan(user.id);
+        if (res.success && res.data && res.data.plan?.limits_config) {
+          const limits = res.data.plan.limits_config;
+          // Placeholder: contador atual deveria vir do backend (user_chat_limits)
+          // Aqui usamos o número de mensagens do usuário na sessão atual como aproximação
+          const currentCount = messages.filter(m => m.isUser).length;
+          if (currentCount >= (limits.daily_chat_messages ?? 5) && res.data.subscription_status === 'free') {
+            alert('Você usou suas mensagens gratuitas hoje. Faça upgrade para chat ilimitado.');
+            return;
+          }
+        }
+      }
+    } catch {}
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text: textToSend,
@@ -186,7 +206,7 @@ export default function ChatIAScreen() {
   const startNewChat = () => {
     setMessages([{
       id: '1',
-      text: 'Olá! Sou sua IA Finder, assistente de moda pessoal do LookFinder. Como posso te ajudar hoje? Posso sugerir looks, combinar peças, dar dicas de estilo ou responder qualquer dúvida sobre moda! 👗✨',
+      text: t('tabs.chat.welcomeMessage'),
       isUser: false,
       timestamp: new Date(),
     }]);
@@ -314,10 +334,10 @@ export default function ChatIAScreen() {
               <Ionicons name="sparkles" size={24} color="#FFFFFF" />
             </View>
             <View>
-              <Text style={styles.aiName}>IA Finder</Text>
+              <Text style={styles.aiName}>{t('tabs.chat.aiName')}</Text>
               <View style={styles.statusContainer}>
                 <View style={styles.onlineIndicator} />
-                <Text style={styles.aiStatus}>Online • Especialista em estilo</Text>
+                <Text style={styles.aiStatus}>{t('tabs.chat.aiStatus')}</Text>
               </View>
             </View>
           </View>
@@ -387,7 +407,7 @@ export default function ChatIAScreen() {
           {/* Quick Suggestions */}
           {messages.length === 1 && (
             <View style={styles.suggestionsContainer}>
-              <Text style={styles.suggestionsTitle}>Perguntas rápidas:</Text>
+              <Text style={styles.suggestionsTitle}>{t('tabs.chat.suggestionsTitle')}</Text>
               <View style={styles.suggestionsGrid}>
                 {quickSuggestions.map((suggestion, index) => renderQuickSuggestion(suggestion, index))}
               </View>
@@ -402,7 +422,7 @@ export default function ChatIAScreen() {
               style={styles.textInput}
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Pergunte sobre moda, estilo, looks..."
+              placeholder={t('tabs.chat.inputPlaceholder')}
               placeholderTextColor="#999999"
               multiline
               maxLength={500}
@@ -433,7 +453,7 @@ export default function ChatIAScreen() {
       >
         <SafeAreaView style={styles.historyModal}>
           <View style={styles.historyHeader}>
-            <Text style={styles.historyHeaderTitle}>Histórico de Conversas</Text>
+            <Text style={styles.historyHeaderTitle}>{t('tabs.chat.historyTitle')}</Text>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowHistory(false)}
@@ -445,9 +465,9 @@ export default function ChatIAScreen() {
           {chatHistory.length === 0 ? (
             <View style={styles.emptyHistory}>
               <Ionicons name="chatbubbles-outline" size={64} color="#CCCCCC" />
-              <Text style={styles.emptyHistoryText}>Nenhuma conversa ainda</Text>
+              <Text style={styles.emptyHistoryText}>{t('tabs.chat.emptyHistoryText')}</Text>
               <Text style={styles.emptyHistorySubtext}>
-                Suas conversas com a IA Finder aparecerão aqui
+                {t('tabs.chat.emptyHistorySubtext')}
               </Text>
             </View>
           ) : (

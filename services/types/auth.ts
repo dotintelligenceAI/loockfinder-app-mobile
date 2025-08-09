@@ -10,6 +10,14 @@ export interface SignUpCredentials {
   fullName?: string;
 }
 
+export interface ResetPasswordRequest {
+  email: string;
+}
+
+export interface UpdatePasswordRequest {
+  newPassword: string;
+}
+
 export interface User {
   id: string;
   email: string;

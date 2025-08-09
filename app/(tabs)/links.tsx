@@ -1,146 +1,187 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
+import { ShoppingCategory, ShoppingLink, shoppingLinksService } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as WebBrowser from 'expo-web-browser';
+import React, { useEffect, useState } from 'react';
 import {
+  FlatList,
+  Linking,
+  RefreshControl,
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  FlatList,
-  RefreshControl,
-  Image,
+  View
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 
-interface LinkItem {
-  id: string;
-  title: string;
-  description: string;
-  url: string;
+interface LinkItem extends ShoppingLink {
+  // Campos de exibição derivados
   image: string;
-  price: string;
-  originalPrice?: string;
-  discount?: string;
-  store: string;
-  category: string;
+  priceLabel: string;
+  originalPriceLabel?: string;
+  discountLabel?: string;
+  store?: string;
 }
 
 export default function LinksScreen() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('todos');
+  const [selectedCategory, setSelectedCategory] = useState<string>('todos');
+  const [categories, setCategories] = useState<ShoppingCategory[]>([]);
+  const [links, setLinks] = useState<LinkItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  // Dados mockados para demonstração
-  const mockLinks: LinkItem[] = [
-    {
-      id: '1',
-      title: 'Vestido Floral Primavera',
-      description: 'Vestido elegante com estampa floral, perfeito para a primavera',
-      url: 'https://exemplo.com/vestido-floral',
-      image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400',
-      price: 'R$ 89,90',
-      originalPrice: 'R$ 129,90',
-      discount: '31% OFF',
-      store: 'Fashion Store',
-      category: 'vestidos'
-    },
-    {
-      id: '2',
-      title: 'Tênis Esportivo Comfort',
-      description: 'Tênis confortável para atividades físicas e uso casual',
-      url: 'https://exemplo.com/tenis-esportivo',
-      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400',
-      price: 'R$ 159,90',
-      originalPrice: 'R$ 199,90',
-      discount: '20% OFF',
-      store: 'Sports Shop',
-      category: 'calcados'
-    },
-    {
-      id: '3',
-      title: 'Bolsa Transversal Couro',
-      description: 'Bolsa elegante em couro genuíno, ideal para o dia a dia',
-      url: 'https://exemplo.com/bolsa-couro',
-      image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400',
-      price: 'R$ 129,90',
-      originalPrice: 'R$ 179,90',
-      discount: '28% OFF',
-      store: 'Leather Goods',
-      category: 'acessorios'
-    },
-    {
-      id: '4',
-      title: 'Blazer Feminino Slim',
-      description: 'Blazer moderno e elegante para ocasiões especiais',
-      url: 'https://exemplo.com/blazer-feminino',
-      image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400',
-      price: 'R$ 199,90',
-      originalPrice: 'R$ 249,90',
-      discount: '20% OFF',
-      store: 'Elegance Fashion',
-      category: 'blazers'
-    },
-  ];
+  // Carregar categorias e links do Supabase
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const cats = await shoppingLinksService.getCategories();
+        if (cats.success) {
+          setCategories([{ id: 'todos', name: t('tabs.links.categories.all'), slug: 'all' } as any, ...cats.data]);
+        }
+        const lk = await shoppingLinksService.getLinksByCategory();
+        if (lk.success) {
+          const mapped = mapLinksForDisplay(lk.data);
+          setLinks(await enrichWithPreviewImages(mapped));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
-  const categories = [
-    { id: 'todos', title: 'Todos' },
-    { id: 'vestidos', title: 'Vestidos' },
-    { id: 'calcados', title: 'Calçados' },
-    { id: 'acessorios', title: 'Acessórios' },
-    { id: 'blazers', title: 'Blazers' },
-  ];
+  useEffect(() => {
+    const loadByCategory = async () => {
+      setLoading(true);
+      try {
+        const lk = await shoppingLinksService.getLinksByCategory(selectedCategory);
+        if (lk.success) {
+          const mapped = mapLinksForDisplay(lk.data);
+          setLinks(await enrichWithPreviewImages(mapped));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadByCategory();
+  }, [selectedCategory]);
+
+  const mapLinksForDisplay = (data: ShoppingLink[]): LinkItem[] => {
+    return data.map((l) => ({
+      ...l,
+      image: (l as any).image_url || '',
+      priceLabel: l.price != null ? formatCurrency(l.price, (l.currency as any) || 'BRL') : '',
+      originalPriceLabel:
+        l.original_price != null ? formatCurrency(l.original_price, (l.currency as any) || 'BRL') : undefined,
+      discountLabel:
+        l.price != null && l.original_price != null && l.original_price > 0
+          ? `${Math.round(((l.original_price - l.price) / l.original_price) * 100)}% OFF`
+          : undefined,
+    }));
+  };
+
+  const enrichWithPreviewImages = async (items: LinkItem[]): Promise<LinkItem[]> => items;
+
+  const formatCurrency = (value: number, currency: string) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency }).format(value);
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Simular carregamento
-    setTimeout(() => {
+    try {
+      const lk = await shoppingLinksService.getLinksByCategory(selectedCategory);
+      if (lk.success) {
+        const mapped = mapLinksForDisplay(lk.data);
+        setLinks(await enrichWithPreviewImages(mapped));
+      }
+    } finally {
       setRefreshing(false);
-    }, 1000);
+    }
   };
 
-  const handleLinkPress = (link: LinkItem) => {
-    // Implementar abertura do link
-    console.log('Abrindo link:', link.url);
+  const handleLinkPress = async (link: LinkItem) => {
+    if (!link.url) return;
+    try {
+      await WebBrowser.openBrowserAsync(link.url);
+    } catch {
+      Linking.openURL(link.url).catch(() => {});
+    }
+  };
+
+  const getHostname = (url?: string | null) => {
+    if (!url) return '';
+    try {
+      const { hostname } = new URL(url);
+      return hostname.replace('www.', '');
+    } catch {
+      return '';
+    }
   };
 
   const renderLinkItem = ({ item }: { item: LinkItem }) => (
     <TouchableOpacity
       style={styles.linkCard}
       onPress={() => handleLinkPress(item)}
-      activeOpacity={0.8}
+      activeOpacity={0.9}
     >
-      <Image source={{ uri: item.image }} style={styles.linkImage} />
-      
+      {/* Conteúdo (sem imagem) */}
       <View style={styles.linkContent}>
-        <View style={styles.linkHeader}>
-          <Text style={styles.linkTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <TouchableOpacity style={styles.favoriteButton}>
-            <Ionicons name="heart-outline" size={20} color="#666666" />
-          </TouchableOpacity>
+        {/* Cabeçalho: título + domínio e badges */}
+        <View style={styles.headerRowTextOnly}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.titleTextOnly} numberOfLines={2}>
+              {item.title || getHostname(item.url)}
+            </Text>
+            <Text style={styles.domainTextOnly}>{getHostname(item.url)}</Text>
+          </View>
+          <View style={styles.badgesRight}>
+            {item.discountLabel && (
+              <View style={styles.discountBadge}>
+                <Text style={styles.discountText}>{item.discountLabel}</Text>
+              </View>
+            )}
+            {item.is_url_valid === false && (
+              <View style={styles.invalidBadgeInline}>
+                <Ionicons name="warning" size={12} color="#fff" />
+                <Text style={styles.invalidBadgeText}>Link inválido</Text>
+              </View>
+            )}
+          </View>
         </View>
-        
-        <Text style={styles.linkDescription} numberOfLines={2}>
-          {item.description}
-        </Text>
-        
+
+        {/* Preço atual e original */}
         <View style={styles.priceContainer}>
-          <Text style={styles.currentPrice}>{item.price}</Text>
-          {item.originalPrice && (
-            <Text style={styles.originalPrice}>{item.originalPrice}</Text>
+          <Text style={styles.currentPrice}>{item.priceLabel}</Text>
+          {item.originalPriceLabel && (
+            <Text style={styles.originalPrice}>{item.originalPriceLabel}</Text>
           )}
-          {item.discount && (
-            <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>{item.discount}</Text>
+        </View>
+
+        {/* Descrição */}
+        {!!item.description && (
+          <Text style={styles.linkDescription} numberOfLines={2}>
+            {item.description}
+          </Text>
+        )}
+
+        {/* Rodapé: loja, clicks e botão */}
+        <View style={styles.footerRow}>
+          <View style={styles.footerLeft}>
+            {!!item.store && <Text style={styles.storeName}>{item.store}</Text>}
+            {typeof item.click_count === 'number' && (
+              <View style={styles.clicksBadge}>
+                <Ionicons name="eye-outline" size={14} color="#666" />
+                <Text style={styles.clicksText}>{item.click_count}</Text>
             </View>
           )}
         </View>
         
-        <View style={styles.storeContainer}>
-          <Text style={styles.storeName}>{item.store}</Text>
-          <TouchableOpacity style={styles.buyButton}>
+          <TouchableOpacity style={styles.buyButton} onPress={() => handleLinkPress(item)}>
             <Text style={styles.buyButtonText}>Comprar</Text>
             <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
           </TouchableOpacity>
@@ -190,7 +231,7 @@ export default function LinksScreen() {
       {/* Categorias */}
       <View style={styles.categoriesSection}>
         <FlatList
-          data={categories}
+          data={categories.map((c) => ({ id: c.id, title: c.name }))}
           keyExtractor={(item) => item.id}
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -201,7 +242,7 @@ export default function LinksScreen() {
 
       {/* Lista de Links */}
       <FlatList
-        data={mockLinks}
+        data={links}
         keyExtractor={(item) => item.id}
         renderItem={renderLinkItem}
         contentContainerStyle={styles.linksList}
@@ -285,36 +326,30 @@ const styles = StyleSheet.create({
     elevation: 3,
     overflow: 'hidden',
   },
-  linkImage: {
-    width: '100%',
-    height: 200,
-    resizeMode: 'cover',
-  },
   linkContent: {
     padding: 16,
   },
-  linkHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  linkTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1a1a1a',
-    flex: 1,
-    marginRight: 8,
-  },
-  favoriteButton: {
-    padding: 4,
-  },
+  headerRowTextOnly: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
+  titleTextOnly: { fontSize: 18, fontWeight: '700', color: '#1a1a1a' },
+  domainTextOnly: { color: '#666', fontSize: 12, marginTop: 2 },
+  domainText: { color: '#E5E7EB', fontSize: 12, marginTop: 2 },
   linkDescription: {
     fontSize: 14,
     color: '#666666',
     lineHeight: 20,
     marginBottom: 12,
   },
+  badgesRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  invalidBadgeInline: {
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  invalidBadgeText: { color: '#fff', fontSize: 10, fontWeight: '600' },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -343,16 +378,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  storeContainer: {
+  footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  footerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   storeName: {
     fontSize: 14,
     color: '#666666',
     fontWeight: '500',
   },
+  clicksBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  clicksText: { color: '#666', fontSize: 12, fontWeight: '600' },
   buyButton: {
     backgroundColor: '#1a1a1a',
     flexDirection: 'row',
