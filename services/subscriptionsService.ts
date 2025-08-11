@@ -118,12 +118,36 @@ class SubscriptionsService {
     }
   }
 
-  async prepareCheckout(planId: string): Promise<{ success: boolean; url?: string; error?: string }> {
+  async prepareCheckout(
+    planId: string,
+    userId?: string,
+    stripePriceId?: string
+  ): Promise<{ success: boolean; url?: string; error?: string }> {
     try {
       // Espera existir uma RPC ou Edge Function que retorna checkout_url
-      const { data, error } = await supabase.rpc('prepare_checkout_data', { plan_id: planId });
-      if (error) return { success: false, error: error.message };
-      return { success: true, url: (data as any)?.checkout_url || (data as any)?.url };
+      const params: Record<string, any> = { plan_id: planId };
+      if (userId) params.user_id = userId;
+      const { data, error } = await supabase.rpc('prepare_checkout_data', params);
+      if (!error) {
+        return { success: true, url: (data as any)?.checkout_url || (data as any)?.url };
+      }
+      // Fallback: se RPC não existir, tentar Edge Function homônima
+      if ((error as any)?.code === 'PGRST202') {
+        // 1) Tenta prepare_checkout_data
+        const fn1 = await (supabase as any).functions.invoke('prepare_checkout_data', {
+          body: { ...params, stripe_price_id: stripePriceId },
+        });
+        if (!fn1.error && fn1.data) {
+          return { success: true, url: (fn1.data as any)?.checkout_url || (fn1.data as any)?.url };
+        }
+        // 2) Tenta slug alternativo comum (ex.: 'hyper-service')
+        const fn2 = await (supabase as any).functions.invoke('hyper-service', {
+          body: { ...params, stripe_price_id: stripePriceId },
+        });
+        if (fn2.error) return { success: false, error: fn2.error.message || 'Erro ao preparar checkout' };
+        return { success: true, url: (fn2.data as any)?.checkout_url || (fn2.data as any)?.url };
+      }
+      return { success: false, error: (error as any)?.message || 'Erro ao preparar checkout' };
     } catch (e) {
       return { success: false, error: 'Erro ao preparar checkout' };
     }

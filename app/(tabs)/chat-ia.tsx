@@ -1,22 +1,22 @@
 import { PlanLockNotice } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
-import { subscriptionsService } from '@/services';
+import { chatService } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Alert,
-    Dimensions,
-    FlatList,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -129,21 +129,18 @@ export default function ChatIAScreen() {
   const sendMessage = async (messageText?: string) => {
     const textToSend = messageText || inputText.trim();
     if (!textToSend) return;
+    if (!user?.id) {
+      setIsFreeBlocked(true);
+      return;
+    }
+    const userId = user.id;
 
-    // Guard de plano: checar limites antes de enviar
+    // Guard de limites via chatService + plano
     try {
-      if (user?.id) {
-        const res = await subscriptionsService.getProfileWithPlan(user.id);
-        if (res.success && res.data && res.data.plan?.limits_config) {
-          const limits = res.data.plan.limits_config;
-          // Placeholder: contador atual deveria vir do backend (user_chat_limits)
-          // Aqui usamos o número de mensagens do usuário na sessão atual como aproximação
-          const currentCount = messages.filter(m => m.isUser).length;
-          if (currentCount >= (limits.daily_chat_messages ?? 5) && res.data.subscription_status === 'free') {
-            setIsFreeBlocked(true);
-            return;
-          }
-        }
+      const limitsCheck = await chatService.checkUserLimits(userId);
+      if (!limitsCheck.canSend) {
+        setIsFreeBlocked(true);
+        return;
       }
     } catch {}
 
@@ -158,11 +155,13 @@ export default function ChatIAScreen() {
     setInputText('');
     setIsTyping(true);
 
-    // Simular delay da IA
-    setTimeout(() => {
+    // Enviar ao serviço real
+    try {
+      const result = await chatService.sendMessage(textToSend, userId);
+      const aiText = result.response || t('tabs.chat.defaultAiResponse');
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: getAIResponse(textToSend),
+        text: aiText,
         isUser: false,
         timestamp: new Date(),
       };
@@ -172,8 +171,17 @@ export default function ChatIAScreen() {
         saveCurrentChat(updatedMessages);
         return updatedMessages;
       });
+    } catch (e) {
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: t('tabs.chat.errorResponse'),
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, aiResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const saveCurrentChat = (currentMessages: Message[]) => {
@@ -366,7 +374,7 @@ export default function ChatIAScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         {isFreeBlocked && (
-          <PlanLockNotice variant="full" />
+          <PlanLockNotice />
         )}
         <ScrollView
           ref={scrollViewRef}

@@ -271,7 +271,12 @@ export default function PerfilScreen() {
       if (editAvatar && editAvatar !== profile?.avatar_url && !editAvatar.startsWith('http')) {
         avatarUrl = await uploadAvatar(editAvatar);
       }
-      const updatedRes = await profilesService.updateProfile(user.id, { name: editFullName, avatar_url: avatarUrl, bio: editBio, instagram: editInstagram });
+      const updatedRes = await profilesService.updateProfile(user.id, {
+        name: editFullName,
+        avatar_url: avatarUrl,
+        bio: editBio,
+        instagram: editInstagram,
+      });
       if (updatedRes.success) setProfile(updatedRes.data);
       showSuccess(t('tabs.perfil.profileUpdated'));
       setEditModalVisible(false);

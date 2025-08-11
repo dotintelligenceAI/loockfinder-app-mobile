@@ -78,8 +78,6 @@ class CuponsService {
           *,
           store:stores(*)
         `)
-        .eq('active', true)
-        .gte('expiry_date', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -163,8 +161,6 @@ class CuponsService {
           store:stores(*)
         `)
         .eq('store_id', storeId)
-        .eq('active', true)
-        .gte('expiry_date', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -211,7 +207,6 @@ class CuponsService {
           store:stores(*)
         `)
         .eq('id', id)
-        .eq('active', true)
         .single();
 
       if (error) {
@@ -256,8 +251,6 @@ class CuponsService {
           *,
           store:stores(*)
         `)
-        .eq('active', true)
-        .gte('expiry_date', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -306,8 +299,6 @@ class CuponsService {
           *,
           store:stores(*)
         `)
-        .eq('active', true)
-        .gte('expiry_date', new Date().toISOString())
         .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,store.name.ilike.%${searchTerm}%`)
         .order('created_at', { ascending: false });
 

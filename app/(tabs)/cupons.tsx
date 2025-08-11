@@ -6,16 +6,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    FlatList,
-    Image,
-    Linking,
-    RefreshControl,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  Image,
+  Linking,
+  RefreshControl,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 // Interface para compatibilidade com dados do banco
@@ -287,23 +287,28 @@ export default function CuponsScreen() {
       return `${discount}% ${t('tabs.cupons.discount')}`;
     };
 
+    // Status visual: considerar cupom expirado como "apagado"
+    const now = new Date();
+    const isExpired = item.expiry_date ? new Date(item.expiry_date) < now : false;
+    const isInactive = item.isUsed || isExpired || item.active === false;
+
     return (
       <TouchableOpacity
-        style={[styles.couponCard, item.isUsed && styles.couponCardUsed]}
-        onPress={() => !item.isUsed && handleUseCoupon(item)}
+        style={[styles.couponCard, isInactive && styles.couponCardUsed]}
+        onPress={() => !isInactive && handleUseCoupon(item)}
         activeOpacity={0.8}
-        disabled={item.isUsed}
+        disabled={isInactive}
       >
         <LinearGradient
-          colors={item.isUsed ? ['#E5E7EB', '#F3F4F6'] : ['#1a1a1a', '#333333']}
+          colors={isInactive ? ['#E5E7EB', '#F3F4F6'] : ['#1a1a1a', '#333333']}
           style={styles.couponGradient}
         >
           <View style={styles.couponHeader}>
             <View style={styles.couponInfo}>
-              <Text style={[styles.couponTitle, item.isUsed && styles.couponTitleUsed]}>
+              <Text style={[styles.couponTitle, isInactive && styles.couponTitleUsed]}>
                 {item.title}
               </Text>
-              <Text style={[styles.couponDescription, item.isUsed && styles.couponDescriptionUsed]}>
+              <Text style={[styles.couponDescription, isInactive && styles.couponDescriptionUsed]}>
                 {item.description}
               </Text>
             </View>
@@ -314,20 +319,20 @@ export default function CuponsScreen() {
 
           <View style={styles.couponDetails}>
             <View style={styles.discountContainer}>
-              <Text style={[styles.discountText, item.isUsed && styles.discountTextUsed]}>
+              <Text style={[styles.discountText, isInactive && styles.discountTextUsed]}>
                 {formatDiscount(item.discount)}
               </Text>
             </View>
 
             <View style={styles.codeContainer}>
-              <Text style={[styles.codeLabel, item.isUsed && styles.codeLabelUsed]}>
+              <Text style={[styles.codeLabel, isInactive && styles.codeLabelUsed]}>
                 {t('tabs.cupons.codeLabel')}
               </Text>
               <View style={styles.codeRow}>
-                <Text style={[styles.codeText, item.isUsed && styles.codeTextUsed]}>
+                <Text style={[styles.codeText, isInactive && styles.codeTextUsed]}>
                   {item.code}
                 </Text>
-                {!item.isUsed && (
+                {!isInactive && (
                   <TouchableOpacity
                     style={styles.copyButton}
                     onPress={() => handleCopyCode(item.code)}
@@ -342,18 +347,18 @@ export default function CuponsScreen() {
                           <View style={styles.storeInfo}>
               <TouchableOpacity
                 onPress={() => item.store && handleOpenStoreWebsite(item.store)}
-                disabled={item.isUsed}
+                disabled={isInactive}
               >
-                              <Text style={[styles.storeName, item.isUsed && styles.storeNameUsed]}>
+                              <Text style={[styles.storeName, isInactive && styles.storeNameUsed]}>
                 {item.store?.name || t('tabs.cupons.storeNameDefault')}
               </Text>
               </TouchableOpacity>
-              <Text style={[styles.validUntil, item.isUsed && styles.validUntilUsed]}>
+              <Text style={[styles.validUntil, isInactive && styles.validUntilUsed]}>
                 {t('tabs.cupons.validUntil')}: {formatDate(item.expiry_date)}
               </Text>
             </View>
               
-              {!item.isUsed ? (
+              {!isInactive ? (
                 <TouchableOpacity style={styles.useButton}>
                   <Text style={styles.useButtonText}>{t('tabs.cupons.useButtonText')}</Text>
                   <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />

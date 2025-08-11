@@ -11,6 +11,7 @@ export { shoppingLinksService } from './shoppingLinksService';
 export { subcategoriesService } from './subcategoriesService';
 export { subscriptionsService } from './subscriptionsService';
 export { userProfilesService } from './userProfilesService';
+export { chatService } from './chataiService';
 
 // Types
 export type { CategoriesResponse, Category } from './categoriesService';
