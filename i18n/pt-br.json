@@ -87,18 +87,22 @@
       "categories": "Categorias",
       "allCategories": "Todas as categorias",
       "viewAll": "Ver todos",
-      "noLooks": "Nenhum look encontrado",
+      "noLooks": "look encontrado",
       "loadMore": "Carregar mais",
       "searchPlaceholder": "Buscar looks...",
       "filterByCategory": "Filtrar por categoria",
       "sortBy": "Ordenar por",
-      "sortOptions": {
+        "sortOptions": {
         "newest": "Mais recentes",
         "oldest": "Mais antigos",
         "popular": "Mais populares",
         "name": "Nome A-Z"
       },
-      "inspiration": "SER UMA FINDER É SER TUDO"
+      "inspiration": "SER UMA FINDER É SER TUDO",
+      "loadMore": {
+        "button": "Carregar novos looks",
+        "remaining": "Carregar novos looks ({count} restantes)"
+      }
     },
     "chat": {
       "title": "Chat IA",
@@ -237,6 +241,10 @@
         "accessories": "Acessórios",
         "blazers": "Blazers"
       },
+      "headerTitle": "LINKS DE COMPRA",
+      "welcomeUserPrefix": "Encontre as melhores ofertas,",
+      "buy": "Comprar",
+      "invalidLink": "Link inválido",
       "items": {
         "dress": {
           "title": "Vestido Floral Primavera",
@@ -260,6 +268,10 @@
         "sportsShop": "Sports Shop",
         "leatherGoods": "Leather Goods",
         "eleganceFashion": "Elegance Fashion"
+      },
+      "paywall": {
+        "message": "Links de compras são exclusivos para assinantes.",
+        "cta": "Fazer Upgrade"
       }
     },
     "perfil": {
@@ -308,6 +320,11 @@
       "tabs": {
         "favorites": "Favoritos"
       },
+      "plan": {
+        "free": "Finder Free",
+        "expires": "Expira em",
+        "change": "Upgrade / Alterar Plano"
+      },
       "logout": {
         "title": "Sair da conta",
         "message": "Tem certeza que deseja sair?",
@@ -350,6 +367,10 @@
     "preloader": {
       "loading": "Carregando...",
       "pleaseWait": "Por favor, aguarde..."
+    },
+    "planLock": {
+      "freeMessage": "Você está no plano Finder Free",
+      "upgradeCta": "Fazer upgrade para acessar"
     }
   },
   "errors": {

@@ -1,6 +1,7 @@
+import { PlanLockNotice } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
-import { ShoppingCategory, ShoppingLink, shoppingLinksService } from '@/services';
+import { ShoppingCategory, ShoppingLink, shoppingLinksService, subscriptionsService } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
@@ -32,6 +33,7 @@ export default function LinksScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
   const [categories, setCategories] = useState<ShoppingCategory[]>([]);
   const [links, setLinks] = useState<LinkItem[]>([]);
+  const [canAccess, setCanAccess] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
 
   // Carregar categorias e links do Supabase
@@ -39,6 +41,15 @@ export default function LinksScreen() {
     const load = async () => {
       setLoading(true);
       try {
+        // Guard de acesso conforme plano
+        if (user?.id) {
+          const prof = await subscriptionsService.getProfileWithPlan(user.id);
+          if (prof.success && prof.data?.plan?.limits_config) {
+            setCanAccess(Boolean(prof.data.plan.limits_config.can_access_shopping_links));
+          } else {
+            setCanAccess(false);
+          }
+        }
         const cats = await shoppingLinksService.getCategories();
         if (cats.success) {
           setCategories([{ id: 'todos', name: t('tabs.links.categories.all'), slug: 'all' } as any, ...cats.data]);
@@ -148,7 +159,7 @@ export default function LinksScreen() {
             {item.is_url_valid === false && (
               <View style={styles.invalidBadgeInline}>
                 <Ionicons name="warning" size={12} color="#fff" />
-                <Text style={styles.invalidBadgeText}>Link inválido</Text>
+                <Text style={styles.invalidBadgeText}>{t('tabs.links.invalidLink')}</Text>
               </View>
             )}
           </View>
@@ -182,7 +193,7 @@ export default function LinksScreen() {
         </View>
         
           <TouchableOpacity style={styles.buyButton} onPress={() => handleLinkPress(item)}>
-            <Text style={styles.buyButtonText}>Comprar</Text>
+            <Text style={styles.buyButtonText}>{t('tabs.links.buy')}</Text>
             <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -218,10 +229,10 @@ export default function LinksScreen() {
       >
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.title}>LINKS DE COMPRA</Text>
+            <Text style={styles.title}>{t('tabs.links.headerTitle')}</Text>
             {user && (
               <Text style={styles.welcomeUser}>
-                Encontre as melhores ofertas, {user.fullName?.split(' ')[0] || 'Finder'}!
+                {t('tabs.links.welcomeUserPrefix')} {user.fullName?.split(' ')[0] || 'Finder'}!
               </Text>
             )}
           </View>
@@ -240,22 +251,28 @@ export default function LinksScreen() {
         />
       </View>
 
-      {/* Lista de Links */}
-      <FlatList
-        data={links}
-        keyExtractor={(item) => item.id}
-        renderItem={renderLinkItem}
-        contentContainerStyle={styles.linksList}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#1a1a1a']}
-            tintColor="#1a1a1a"
-          />
-        }
-        showsVerticalScrollIndicator={false}
-      />
+      {/* Lista de Links / Paywall */}
+      {canAccess ? (
+        <FlatList
+          data={links}
+          keyExtractor={(item) => item.id}
+          renderItem={renderLinkItem}
+          contentContainerStyle={styles.linksList}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#1a1a1a']}
+              tintColor="#1a1a1a"
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={{ padding: 20 }}>
+          <PlanLockNotice />
+        </View>
+      )}
     </SafeAreaView>
   );
 }

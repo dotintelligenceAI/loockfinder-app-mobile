@@ -87,7 +87,7 @@
       "categories": "Categorías",
       "allCategories": "Todas las categorías",
       "viewAll": "Ver todos",
-      "noLooks": "No se encontraron looks",
+      "noLooks": "encontraron looks",
       "loadMore": "Cargar más",
       "searchPlaceholder": "Buscar looks...",
       "filterByCategory": "Filtrar por categoría",
@@ -98,7 +98,11 @@
         "popular": "Más populares",
         "name": "Nombre A-Z"
       },
-      "inspiration": "SER UNA FINDER ES SER TODO"
+      "inspiration": "SER UNA FINDER ES SER TODO",
+      "loadMore": {
+        "button": "Cargar nuevos looks",
+        "remaining": "Cargar nuevos looks ({count} restantes)"
+      }
     },
     "chat": {
       "title": "Chat IA",
@@ -229,7 +233,15 @@
       "shareApp": "Compartir app",
       "version": "Versión",
       "developedBy": "Desarrollado por",
-      "allRightsReserved": "Todos los derechos reservados"
+      "allRightsReserved": "Todos los derechos reservados",
+      "headerTitle": "ENLACES DE COMPRA",
+      "welcomeUserPrefix": "Encuentra las mejores ofertas,",
+      "buy": "Comprar",
+      "invalidLink": "Enlace inválido",
+      "paywall": {
+        "message": "Los enlaces de compras son exclusivos para suscriptores.",
+        "cta": "Mejorar ahora"
+      }
     },
     "perfil": {
       "title": "Perfil",
@@ -277,6 +289,11 @@
       "tabs": {
         "favorites": "Favoritos"
       },
+      "plan": {
+        "free": "Finder Free",
+        "expires": "Vence el",
+        "change": "Mejorar / Cambiar Plan"
+      },
       "logout": {
         "title": "Cerrar sesión",
         "message": "¿Estás seguro de que quieres cerrar sesión?",
@@ -319,6 +336,10 @@
     "preloader": {
       "loading": "Cargando...",
       "pleaseWait": "Por favor, espera..."
+    },
+    "planLock": {
+      "freeMessage": "Estás en el plan Finder Free",
+      "upgradeCta": "Mejorar para acceder"
     }
   },
   "errors": {

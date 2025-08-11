@@ -2,7 +2,7 @@ import { Toast } from '@/components/Toast/Toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/hooks/useToast';
-import { favoritesService, supabase, userProfilesService } from '@/services';
+import { favoritesService, profilesService, subscriptionsService, supabase } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
@@ -37,6 +37,7 @@ export default function PerfilScreen() {
   const [profile, setProfile] = useState<any>(null);
   const [favorites, setFavorites] = useState<any[]>([]);
   const [favoritesCount, setFavoritesCount] = useState(0);
+  const [planName, setPlanName] = useState<string>('');
   const [loadingFavorites, setLoadingFavorites] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedLookId, setSelectedLookId] = useState<string | null>(null);
@@ -58,6 +59,7 @@ export default function PerfilScreen() {
     if (user?.id) {
       loadProfile();
       loadFavorites();
+      loadPlan();
     }
   }, [user?.id]);
 
@@ -106,14 +108,23 @@ export default function PerfilScreen() {
 
   const loadProfile = async () => {
     if (!user?.id) return;
-    const data = await userProfilesService.getUserProfile(user.id);
-    setProfile(data);
-    setEditFullName(data?.full_name || '');
-    setEditBio(data?.bio || '');
-    setEditAvatar(data?.avatar_url || null);
-    setEditPhone(data?.phone || '');
-    setEditLocation(data?.location || '');
-    setEditInstagram(data?.instagram_link || '');
+    const res = await profilesService.getProfile(user.id);
+    if (res.success && res.data) {
+      const data: any = res.data;
+      setProfile(data);
+      setEditFullName(data?.name || '');
+      setEditBio(data?.bio || '');
+      setEditAvatar(data?.avatar_url || null);
+      setEditInstagram(data?.instagram || '');
+    }
+  };
+
+  const loadPlan = async () => {
+    if (!user?.id) return;
+    const res = await subscriptionsService.getProfileWithPlan(user.id);
+    if (res.success && res.data) {
+      setPlanName(res.data?.plan?.name || (res.data.subscription_status === 'free' ? 'Finder Free' : ''));
+    }
   };
 
   const loadFavorites = async () => {
@@ -260,15 +271,8 @@ export default function PerfilScreen() {
       if (editAvatar && editAvatar !== profile?.avatar_url && !editAvatar.startsWith('http')) {
         avatarUrl = await uploadAvatar(editAvatar);
       }
-      const updated = await userProfilesService.updateUserProfile(user.id, {
-        full_name: editFullName,
-        bio: editBio,
-        avatar_url: avatarUrl,
-        phone: editPhone,
-        location: editLocation,
-        instagram_link: editInstagram,
-      });
-      setProfile(updated);
+      const updatedRes = await profilesService.updateProfile(user.id, { name: editFullName, avatar_url: avatarUrl, bio: editBio, instagram: editInstagram });
+      if (updatedRes.success) setProfile(updatedRes.data);
       showSuccess(t('tabs.perfil.profileUpdated'));
       setEditModalVisible(false);
     } catch (e) {
@@ -343,8 +347,13 @@ export default function PerfilScreen() {
               </View>
               
               <Text style={styles.profileName}>
-                {profile?.full_name || user?.fullName || 'Finder'}
+                {profile?.name || user?.fullName || 'Finder'}
               </Text>
+              {!!planName && (
+                <Text style={styles.planBadge}>
+                  {planName}
+                </Text>
+              )}
               <Text style={styles.profileBio}>
                 {profile?.bio || t('tabs.perfil.defaultBio')}
               </Text>
@@ -366,6 +375,10 @@ export default function PerfilScreen() {
 
               {/* Botões de ação */}
               <View style={styles.actionButtons}>
+                {/* <TouchableOpacity style={[styles.editProfileButton, { backgroundColor: '#4A4A4A' }]} onPress={() => router.push('/auth/plans' as any)}>
+                  <Ionicons name="pricetags-outline" size={16} color="#FFFFFF" />
+                  <Text style={styles.editProfileText}>{'Upgrade / Alterar Plano'}</Text>
+                </TouchableOpacity> */}
                 <TouchableOpacity style={styles.editProfileButton} onPress={() => setEditModalVisible(true)}>
                   <Ionicons name="pencil" size={16} color="#FFFFFF" />
                   <Text style={styles.editProfileText}>{t('tabs.perfil.editProfile')}</Text>
@@ -474,6 +487,19 @@ export default function PerfilScreen() {
               style={styles.bottomSheetContent}
               showsVerticalScrollIndicator={false}
             >
+            {/* Plano atual */}
+            <View style={{ marginBottom: 16, marginTop: 16 }}>
+              <View style={{ backgroundColor: '#F8F9FA', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#E5E7EB' }}>
+                <Text style={{ color: '#1a1a1a', fontWeight: '700' }}>{planName || t('tabs.perfil.plan.free')}</Text>
+                {/** Datas podem ser adicionadas quando disponível via loadPlan -> subscription_expires_at */}
+                {/* <Text style={{ color: '#666' }}>{t('tabs.perfil.plan.expires')}: {subscriptionExpiresAt ? new Date(subscriptionExpiresAt).toLocaleDateString('pt-BR') : '-'}</Text> */}
+                <TouchableOpacity style={[styles.editProfileButton, { marginTop: 10 }]} onPress={() => router.push('/auth/plans' as any)}>
+                  <Ionicons name="pricetags-outline" size={16} color="#FFFFFF" />
+                  <Text style={styles.editProfileText}>{t('tabs.perfil.plan.change')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
               {/* Avatar Editor */}
               <View style={styles.avatarSection}>
                 <TouchableOpacity onPress={openImagePicker} style={styles.avatarEditButton}>
@@ -721,6 +747,19 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     marginBottom: 8,
     textAlign: 'center',
+  },
+  planBadge: {
+    alignSelf: 'center',
+    backgroundColor: '#F1F5FF',
+    color: '#1a1a1a',
+    borderColor: '#D0E0FF',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 12,
   },
   profileBio: {
     fontSize: 16,

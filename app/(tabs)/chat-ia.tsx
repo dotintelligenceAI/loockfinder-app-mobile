@@ -1,3 +1,4 @@
+import { PlanLockNotice } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { subscriptionsService } from '@/services';
@@ -52,6 +53,7 @@ export default function ChatIAScreen() {
   const [isTyping, setIsTyping] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
+  const [isFreeBlocked, setIsFreeBlocked] = useState<boolean>(false);
   const [currentChatId, setCurrentChatId] = useState<string>('');
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -138,7 +140,7 @@ export default function ChatIAScreen() {
           // Aqui usamos o número de mensagens do usuário na sessão atual como aproximação
           const currentCount = messages.filter(m => m.isUser).length;
           if (currentCount >= (limits.daily_chat_messages ?? 5) && res.data.subscription_status === 'free') {
-            alert('Você usou suas mensagens gratuitas hoje. Faça upgrade para chat ilimitado.');
+            setIsFreeBlocked(true);
             return;
           }
         }
@@ -363,6 +365,9 @@ export default function ChatIAScreen() {
         style={styles.chatContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        {isFreeBlocked && (
+          <PlanLockNotice variant="full" />
+        )}
         <ScrollView
           ref={scrollViewRef}
           style={styles.messagesContainer}

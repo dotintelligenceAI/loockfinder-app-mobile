@@ -1,8 +1,8 @@
-import { Gallery4Item } from '@/components';
+import { Gallery4Item, PlanLockNotice } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { usePreloader } from '@/contexts/PreloaderContext';
-import { categoriesService, favoritesService, subcategoriesService } from '@/services';
+import { categoriesService, favoritesService, subcategoriesService, subscriptionsService } from '@/services';
 import { Look, looksService } from '@/services/looksService';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,7 +14,6 @@ import {
   Modal,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -23,6 +22,7 @@ import {
   ViewToken
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
+import { SafeAreaView as SafeAreaViewCompat } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -35,7 +35,10 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [looksLimit, setLooksLimit] = useState(100);
+  const [looksLimit, setLooksLimit] = useState(50);
+  const [freeReloadsLeft, setFreeReloadsLeft] = useState<number>(3);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchEnabled, setIsSearchEnabled] = useState(true);
   const PAGE_SIZE = 12;
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -60,15 +63,45 @@ export default function HomeScreen() {
     loadCategories();
     loadLooks(true);
     loadFavoritedLooks();
+    (async () => {
+      if (user?.id) {
+        const res = await subscriptionsService.getProfileWithPlan(user.id);
+        if (res.success) {
+          const isFree = res.data?.subscription_status === 'free';
+          setIsSearchEnabled(!isFree);
+          if (isFree) setFreeReloadsLeft(3);
+          else setFreeReloadsLeft(Number.MAX_SAFE_INTEGER);
+        }
+      }
+    })();
   }, []);
 
   useEffect(() => {
+    // Se está em modo busca, não disparar carregamento por subcategoria
+    if (searchQuery.trim().length > 0) return;
     if (selectedSubcategory) {
       loadLooksBySubcategory(selectedSubcategory);
     } else {
       loadLooks(true);
     }
-  }, [selectedSubcategory]);
+  }, [selectedSubcategory, searchQuery]);
+
+  useEffect(() => {
+    if (!isSearchEnabled) return;
+    const query = searchQuery.trim();
+    const handler = setTimeout(() => {
+      (async () => {
+        if (query.length === 0) {
+          if (selectedSubcategory) await loadLooksBySubcategory(selectedSubcategory);
+          else await loadLooks(true);
+          return;
+        }
+
+        await performSearch(query);
+      })();
+    }, 350);
+    return () => clearTimeout(handler);
+  }, [searchQuery, isSearchEnabled, looksLimit, selectedSubcategory]);
 
   const loadCategories = async () => {
     try {
@@ -122,6 +155,64 @@ export default function HomeScreen() {
       console.error('Erro ao carregar looks da subcategoria:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const performSearch = async (query: string) => {
+    try {
+      setLoading(true);
+      showPreloader('Carregando looks...');
+
+      // Buscar categorias e subcategorias e filtrar por nome que contenha o termo
+      const matchedSubcatIds: string[] = [];
+      const matchedCategoryIds: string[] = [];
+
+      const categoriesRes = await categoriesService.getCategories();
+      const categoriesList = categoriesRes?.data || [];
+      for (const cat of categoriesList) {
+        if (cat.title?.toLowerCase().includes(query.toLowerCase())) {
+          matchedCategoryIds.push(cat.id);
+        }
+        try {
+          const subs = await subcategoriesService.getSubcategoriesByCategory(cat.id);
+          subs.forEach((s) => {
+            if (s.title?.toLowerCase().includes(query.toLowerCase())) {
+              matchedSubcatIds.push(s.id);
+            }
+          });
+        } catch {}
+      }
+
+      const uniqueSubIds = Array.from(new Set(matchedSubcatIds));
+      const uniqueCatIds = Array.from(new Set(matchedCategoryIds));
+
+      let collected: Look[] = [];
+      for (const subId of uniqueSubIds) {
+        try {
+          const ls = await looksService.getLooksBySubcategory(subId);
+          collected = collected.concat(ls);
+        } catch {}
+      }
+      for (const catId of uniqueCatIds) {
+        try {
+          const lc = await looksService.getLooksByCategory(catId);
+          collected = collected.concat(lc);
+        } catch {}
+      }
+
+      // Remover duplicados por id
+      const dedupMap = new Map<string, Look>();
+      collected.forEach((l) => dedupMap.set(l.id, l));
+      const deduped = Array.from(dedupMap.values());
+
+      const paginated = deduped.slice(0, looksLimit);
+      setLooks(paginated);
+      setHasMore(deduped.length > paginated.length);
+    } catch (error) {
+      console.error('Erro ao buscar looks:', error);
+    } finally {
+      setLoading(false);
+      hidePreloader();
     }
   };
 
@@ -332,12 +423,21 @@ export default function HomeScreen() {
                 style={styles.searchInput}
                 placeholder={t('tabs.home.searchPlaceholder')}
                 placeholderTextColor="#999999"
+                value={searchQuery}
+                onChangeText={(txt) => {
+                  if (!isSearchEnabled) return;
+                  setSearchQuery(txt);
+                }}
+                editable={isSearchEnabled}
               />
             </View>
             <TouchableOpacity style={styles.filterButton}>
               <Ionicons name="options-outline" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
+          {!isSearchEnabled && (
+            <PlanLockNotice style={{ marginTop: 8 }} variant="compact" />
+          )}
         </View>
       </LinearGradient>
 
@@ -392,7 +492,7 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaViewCompat style={styles.container} edges={['top','left','right']}>
       <FlatList
         data={looks}
         keyExtractor={(item) => item.id}
@@ -407,8 +507,29 @@ export default function HomeScreen() {
                 <Text style={styles.loadingText}>Carregando looks...</Text>
               </View>
             ) : null}
-            {renderSeeMore()}
-            
+            <TouchableOpacity 
+              style={styles.seeMoreButton} 
+              onPress={() => {
+                if (freeReloadsLeft <= 0) return;
+                setLooks(prev => [...prev].sort(() => Math.random() - 0.5));
+                setFreeReloadsLeft(prev => prev - 1);
+              }}
+              disabled={freeReloadsLeft <= 0}
+            >
+              <LinearGradient
+                colors={['#1a1a1a', '#333333']}
+                style={styles.seeMoreGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.seeMoreText}>
+                  {freeReloadsLeft === Number.MAX_SAFE_INTEGER
+                    ? t('tabs.home.loadMore.button')
+                    : t('tabs.home.loadMore.remaining').replace('{count}', String(Math.max(freeReloadsLeft, 0)))}
+                </Text>
+                <Ionicons name="arrow-down" size={16} color="#FFFFFF" />
+              </LinearGradient>
+            </TouchableOpacity>
           </>
         }
         refreshControl={
@@ -475,7 +596,7 @@ export default function HomeScreen() {
       </Modal>
 
 
-    </SafeAreaView>
+    </SafeAreaViewCompat>
   );
 }
 

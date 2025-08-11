@@ -1,7 +1,7 @@
 import { Button, Input, ProtectedRoute, Toast } from '@/components';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/hooks/useToast';
-import { authService } from '@/services';
+import { authService, profilesService } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
@@ -44,6 +44,8 @@ function SignUpScreenContent() {
 
       if (response.success) {
         if (response.user) {
+          // Criar perfil mínimo em 'profiles'
+          await profilesService.createMinimalProfile(response.user.id, fullName || null, null);
           showSuccess(t('auth.signup.signupSuccess'));
           setTimeout(() => {
             router.replace('/auth/plans');

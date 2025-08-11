@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Animated, Platform, View } from 'react-native';
+import { Animated, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 function TabLayoutContent() {
   const { visible } = useTabBarVisibility();
@@ -20,7 +21,7 @@ function TabLayoutContent() {
 
   return (
     <Animated.View style={{ transform: [{ translateY }], flex: 1 }}>
-      <View style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }} edges={['left','right','bottom']}>
         <Tabs
           screenOptions={{
             headerShown: false,
@@ -124,7 +125,7 @@ function TabLayoutContent() {
             }}
           />
         </Tabs>
-      </View>
+      </SafeAreaView>
     </Animated.View>
   );
 }

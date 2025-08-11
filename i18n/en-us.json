@@ -87,7 +87,7 @@
       "categories": "Categories",
       "allCategories": "All categories",
       "viewAll": "View all",
-      "noLooks": "No looks found",
+      "noLooks": "looks",
       "loadMore": "Load more",
       "searchPlaceholder": "Search looks...",
       "filterByCategory": "Filter by category",
@@ -98,7 +98,11 @@
         "popular": "Most popular",
         "name": "Name A-Z"
       },
-      "inspiration": "BEING A FINDER IS BEING EVERYTHING"
+      "inspiration": "BEING A FINDER IS BEING EVERYTHING",
+      "loadMore": {
+        "button": "Load new looks",
+        "remaining": "Load new looks ({count} left)"
+      }
     },
     "chat": {
       "title": "AI Chat",
@@ -229,7 +233,15 @@
       "shareApp": "Share app",
       "version": "Version",
       "developedBy": "Developed by",
-      "allRightsReserved": "All rights reserved"
+      "allRightsReserved": "All rights reserved",
+      "headerTitle": "SHOPPING LINKS",
+      "welcomeUserPrefix": "Find the best deals,",
+      "buy": "Buy",
+      "invalidLink": "Invalid link",
+      "paywall": {
+        "message": "Shopping links are exclusive to subscribers.",
+        "cta": "Upgrade now"
+      }
     },
     "perfil": {
       "title": "Profile",
@@ -277,6 +289,11 @@
       "tabs": {
         "favorites": "Favorites"
       },
+      "plan": {
+        "free": "Finder Free",
+        "expires": "Expires on",
+        "change": "Upgrade / Change Plan"
+      },
       "logout": {
         "title": "Sign out",
         "message": "Are you sure you want to sign out?",
@@ -319,6 +336,10 @@
     "preloader": {
       "loading": "Loading...",
       "pleaseWait": "Please wait..."
+    },
+    "planLock": {
+      "freeMessage": "You are on the Finder Free plan",
+      "upgradeCta": "Upgrade to access"
     }
   },
   "errors": {
