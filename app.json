@@ -39,7 +39,11 @@
     },
     "updates": {
       "url": "https://u.expo.dev/3f689b8a-86a1-4e20-8674-13f05630422a"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-web-browser"
+    ]
   },
   "web": {
     "bundler": "metro",
