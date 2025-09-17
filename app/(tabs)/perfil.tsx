@@ -4,7 +4,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/hooks/useToast';
 import { favoritesService, profilesService, subscriptionsService, supabase } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -223,41 +223,185 @@ export default function PerfilScreen() {
   };
 
   const openImagePicker = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(t('tabs.perfil.permissionRequired'), t('tabs.perfil.permissionMessage'));
-      return;
+    try {
+      console.log('📱 Solicitando permissão para galeria...');
+      
+      // Solicitar permissão para acessar a galeria
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      console.log('🔐 Status da permissão:', status);
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          t('tabs.perfil.permissionRequired'), 
+          t('tabs.perfil.permissionMessage'),
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Abrir Configurações', onPress: () => {
+              // Tentar abrir as configurações do app
+              console.log('⚙️ Redirecionando para configurações...');
+            }}
+          ]
+        );
+        return;
+      }
+
+      console.log('📸 Abrindo seletor de imagens...');
+      
+      // Abrir seletor de imagens
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8, // Aumentei um pouco a qualidade
+        allowsMultipleSelection: false,
+        selectionLimit: 1,
+      });
+
+      console.log('📷 Resultado do seletor:', result);
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedAsset = result.assets[0];
+        console.log('✅ Imagem selecionada:', {
+          uri: selectedAsset.uri,
+          width: selectedAsset.width,
+          height: selectedAsset.height,
+          fileSize: selectedAsset.fileSize
+        });
+        
+        setEditAvatar(selectedAsset.uri);
+        showSuccess('Foto selecionada! Clique em "Salvar Alterações" para aplicar.');
+      } else {
+        console.log('❌ Seleção cancelada pelo usuário');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao abrir seletor de imagens:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      showError(`Erro ao selecionar foto: ${errorMessage}`);
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setEditAvatar(result.assets[0].uri);
+  };
+
+  const checkStorageBucket = async () => {
+    try {
+      // Verificar se o bucket existe listando buckets
+      const { data: buckets, error } = await supabase.storage.listBuckets();
+      
+      if (error) {
+        console.error('❌ Erro ao listar buckets:', error);
+        console.log('📋 Tentando continuar sem verificação de bucket...');
+        return true; // Continuar mesmo com erro na listagem
+      }
+
+      console.log('📋 Buckets disponíveis:', buckets?.map(b => b.name));
+
+      const userUploadsBucket = buckets?.find(bucket => bucket.name === 'user-uploads');
+      
+      if (!userUploadsBucket) {
+        console.error('❌ Bucket "user-uploads" não encontrado');
+        console.log('📋 Buckets encontrados:', buckets?.map(b => ({ name: b.name, public: b.public })));
+        // Tentar continuar mesmo sem encontrar o bucket na lista
+        console.log('🔄 Tentando fazer upload mesmo assim...');
+        return true;
+      }
+
+      console.log('✅ Bucket "user-uploads" encontrado:', userUploadsBucket);
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao verificar bucket:', error);
+      // Continuar mesmo com erro
+      return true;
     }
   };
 
   const uploadAvatar = async (uri: string) => {
     try {
       setUploading(true);
+      console.log('🔄 Iniciando upload do avatar:', uri);
+      
+      // Verificar conectividade com Supabase
+      console.log('🔗 Verificando conectividade com Supabase...');
+      try {
+        const { data: testData, error: testError } = await supabase.storage.listBuckets();
+        if (testError) {
+          console.warn('⚠️ Erro ao conectar com Supabase Storage:', testError.message);
+        } else {
+          console.log('✅ Conectado ao Supabase Storage');
+          console.log('📋 Buckets disponíveis:', testData?.map(b => b.name) || []);
+        }
+      } catch (testErr) {
+        console.warn('⚠️ Erro de conectividade:', testErr);
+      }
+
+      // Verificar se o bucket existe (opcional, não bloqueia o upload)
+      await checkStorageBucket();
+      
+      // Verificar se o arquivo existe usando a API legacy (sem warning)
       const fileInfo = await FileSystem.getInfoAsync(uri);
-      if (!fileInfo.exists) throw new Error('Arquivo de imagem não encontrado');
-      const fileUri = fileInfo.uri;
-      const response = await fetch(fileUri);
+      console.log('📁 Info do arquivo:', fileInfo);
+      
+      if (!fileInfo.exists) {
+        throw new Error('Arquivo de imagem não encontrado');
+      }
+
+      // Criar o blob da imagem
+      const response = await fetch(uri);
+      if (!response.ok) {
+        throw new Error(`Erro ao ler arquivo: ${response.status}`);
+      }
+      
       const blob = await response.blob();
+      console.log('📦 Blob criado, tamanho:', blob.size);
+
+      // Definir nome e caminho do arquivo
       const fileExt = uri.split('.').pop()?.split('?')[0] || 'jpg';
-      const fileName = `${user?.id || 'user'}_avatar.${fileExt}`;
+      const fileName = `${user?.id || 'user'}_avatar_${Date.now()}.${fileExt}`;
       const filePath = `foto_perfil/${fileName}`;
+      
+      console.log('📤 Fazendo upload para:', filePath);
+      console.log('🗂️ Bucket de destino: user-uploads');
+      console.log('📦 Tamanho do blob:', blob.size, 'bytes');
+      console.log('🏷️ Content-Type:', `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`);
+
+      // Upload para o Supabase Storage
       const { data, error } = await supabase.storage
         .from('user-uploads')
-        .upload(filePath, blob, { upsert: true });
-      if (error) throw error;
+        .upload(filePath, blob, { 
+          upsert: true,
+          contentType: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`
+        });
+
+      if (error) {
+        console.error('❌ Erro no upload:', error);
+        console.error('📋 Detalhes do erro:', {
+          message: error.message,
+          name: error.name
+        });
+        
+        // Tentar diagnóstico do erro
+        if (error.message?.includes('not found') || error.message?.includes('bucket')) {
+          throw new Error('Bucket de storage não encontrado. Verifique a configuração do Supabase.');
+        } else if (error.message?.includes('permission') || error.message?.includes('unauthorized')) {
+          throw new Error('Sem permissão para fazer upload. Verifique as políticas RLS do Supabase.');
+        } else {
+          throw new Error(`Erro no upload: ${error.message}`);
+        }
+      }
+
+      console.log('✅ Upload concluído:', data);
+
+      // Obter URL pública
       const { data: publicUrlData } = supabase.storage
         .from('user-uploads')
         .getPublicUrl(filePath);
-      return publicUrlData.publicUrl;
+
+      const publicUrl = publicUrlData.publicUrl;
+      console.log('🔗 URL pública gerada:', publicUrl);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('❌ Erro no uploadAvatar:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no upload';
+      showError(`Erro no upload da foto: ${errorMessage}`);
+      throw error;
     } finally {
       setUploading(false);
     }
@@ -267,21 +411,51 @@ export default function PerfilScreen() {
     if (!user?.id) return;
     
     let avatarUrl = profile?.avatar_url || null;
+    
     try {
+      console.log('💾 Iniciando salvamento do perfil...');
+      console.log('📷 Avatar atual:', profile?.avatar_url);
+      console.log('📷 Novo avatar:', editAvatar);
+      
+      // Verificar se precisa fazer upload de nova foto
       if (editAvatar && editAvatar !== profile?.avatar_url && !editAvatar.startsWith('http')) {
+        console.log('📤 Upload necessário para nova foto');
         avatarUrl = await uploadAvatar(editAvatar);
+        console.log('✅ Upload concluído, nova URL:', avatarUrl);
+      } else if (editAvatar && editAvatar.startsWith('http')) {
+        // Se já é uma URL, mantém a mesma
+        avatarUrl = editAvatar;
+        console.log('🔗 Mantendo URL existente:', avatarUrl);
       }
-      const updatedRes = await profilesService.updateProfile(user.id, {
+
+      // Dados para atualizar
+      const updateData = {
         name: editFullName,
         avatar_url: avatarUrl,
         bio: editBio,
         instagram: editInstagram,
-      });
-      if (updatedRes.success) setProfile(updatedRes.data);
-      showSuccess(t('tabs.perfil.profileUpdated'));
-      setEditModalVisible(false);
-    } catch (e) {
-      showError(t('tabs.perfil.errorUpdating'));
+      };
+      
+      console.log('💾 Dados para atualizar:', updateData);
+
+      // Atualizar perfil no banco
+      const updatedRes = await profilesService.updateProfile(user.id, updateData);
+      
+      if (updatedRes.success) {
+        console.log('✅ Perfil atualizado com sucesso:', updatedRes.data);
+        setProfile(updatedRes.data);
+        // Atualizar o avatar no estado de edição também
+        setEditAvatar(updatedRes.data?.avatar_url || null);
+        showSuccess(t('tabs.perfil.profileUpdated'));
+        setEditModalVisible(false);
+      } else {
+        console.error('❌ Erro ao atualizar perfil:', updatedRes.error);
+        showError(`Erro ao salvar perfil: ${updatedRes.error || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      console.error('❌ Erro no handleSaveProfile:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      showError(`Erro ao salvar perfil: ${errorMessage}`);
     }
   };
   
@@ -507,7 +681,11 @@ export default function PerfilScreen() {
 
               {/* Avatar Editor */}
               <View style={styles.avatarSection}>
-                <TouchableOpacity onPress={openImagePicker} style={styles.avatarEditButton}>
+                <TouchableOpacity 
+                  onPress={openImagePicker} 
+                  style={styles.avatarEditButton}
+                  disabled={uploading}
+                >
                   {editAvatar ? (
                     <Image source={{ uri: editAvatar }} style={styles.avatarEditImage} />
                   ) : (
@@ -519,10 +697,16 @@ export default function PerfilScreen() {
                     </LinearGradient>
                   )}
                   <View style={styles.cameraOverlay}>
-                    <Ionicons name="camera" size={20} color="#FFFFFF" />
+                    {uploading ? (
+                      <Ionicons name="cloud-upload-outline" size={20} color="#FFFFFF" />
+                    ) : (
+                      <Ionicons name="camera" size={20} color="#FFFFFF" />
+                    )}
                   </View>
                 </TouchableOpacity>
-                <Text style={styles.avatarHint}>Toque para alterar a foto</Text>
+                <Text style={styles.avatarHint}>
+                  {uploading ? 'Fazendo upload...' : 'Toque para alterar a foto'}
+                </Text>
               </View>
 
               {/* Form Fields */}

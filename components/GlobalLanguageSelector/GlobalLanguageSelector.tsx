@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useI18n } from '@/contexts/I18nContext';
-import { LanguageSelector } from '@/components/LanguageSelector';
+import { LanguageSelector } from '../LanguageSelector';
 
 interface GlobalLanguageSelectorProps {
   style?: any;

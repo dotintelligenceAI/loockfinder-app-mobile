@@ -1,3 +1,4 @@
+import { geolocationService, Region } from './geolocationService';
 import { supabase } from './supabase';
 
 export type SubscriptionStatus = 'free' | 'active' | 'past_due' | 'canceled';
@@ -13,6 +14,8 @@ export interface SubscriptionPlan {
   features?: any;
   limits_config?: any;
   stripe_price_id?: string | null;
+  stripe_product_id?: string | null;
+  region?: 'BR' | 'US' | 'EU' | 'OTHER' | null;
   is_popular?: boolean | null;
   sort_order?: number | null;
   is_active?: boolean | null;
@@ -29,13 +32,39 @@ export interface ProfileSubscriptionInfo {
 }
 
 class SubscriptionsService {
-  async getActivePlans(): Promise<{ success: boolean; data: SubscriptionPlan[]; error?: string }> {
+  async getActivePlans(region?: Region): Promise<{ success: boolean; data: SubscriptionPlan[]; error?: string }> {
+    try {
+      // Se não foi especificada uma região, detectar automaticamente
+      if (!region) {
+        const location = await geolocationService.detectLocation();
+        region = location.region;
+      }
+
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('is_active', true)
+        .eq('region', region)
+        .order('sort_order', { ascending: true });
+      
+      if (error) return { success: false, data: [], error: error.message };
+      return { success: true, data: (data || []) as SubscriptionPlan[] };
+    } catch (e) {
+      return { success: false, data: [], error: 'Erro ao carregar planos' };
+    }
+  }
+
+  /**
+   * Obtém planos para todas as regiões (útil para comparação)
+   */
+  async getAllActivePlans(): Promise<{ success: boolean; data: SubscriptionPlan[]; error?: string }> {
     try {
       const { data, error } = await supabase
         .from('subscription_plans')
         .select('*')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
+      
       if (error) return { success: false, data: [], error: error.message };
       return { success: true, data: (data || []) as SubscriptionPlan[] };
     } catch (e) {
@@ -121,28 +150,56 @@ class SubscriptionsService {
   async prepareCheckout(
     planId: string,
     userId?: string,
-    stripePriceId?: string
+    stripePriceId?: string,
+    region?: Region
   ): Promise<{ success: boolean; url?: string; error?: string }> {
     try {
+      // Se não foi especificada uma região, detectar automaticamente
+      if (!region) {
+        const location = await geolocationService.detectLocation();
+        region = location.region;
+      }
+
+      // Buscar o plano específico da região
+      const { data: plan, error: planError } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('id', planId)
+        .eq('region', region)
+        .single();
+
+      if (planError || !plan) {
+        return { success: false, error: 'Plano não encontrado para esta região' };
+      }
+
+      // Usar o stripe_price_id do plano da região específica
+      const finalStripePriceId = stripePriceId || plan.stripe_price_id;
+
       // Espera existir uma RPC ou Edge Function que retorna checkout_url
-      const params: Record<string, any> = { plan_id: planId };
+      const params: Record<string, any> = { 
+        plan_id: planId,
+        region: region,
+        stripe_price_id: finalStripePriceId
+      };
       if (userId) params.user_id = userId;
+      
       const { data, error } = await supabase.rpc('prepare_checkout_data', params);
       if (!error) {
         return { success: true, url: (data as any)?.checkout_url || (data as any)?.url };
       }
+      
       // Fallback: se RPC não existir, tentar Edge Function homônima
       if ((error as any)?.code === 'PGRST202') {
         // 1) Tenta prepare_checkout_data
         const fn1 = await (supabase as any).functions.invoke('prepare_checkout_data', {
-          body: { ...params, stripe_price_id: stripePriceId },
+          body: { ...params, stripe_price_id: finalStripePriceId },
         });
         if (!fn1.error && fn1.data) {
           return { success: true, url: (fn1.data as any)?.checkout_url || (fn1.data as any)?.url };
         }
         // 2) Tenta slug alternativo comum (ex.: 'hyper-service')
         const fn2 = await (supabase as any).functions.invoke('hyper-service', {
-          body: { ...params, stripe_price_id: stripePriceId },
+          body: { ...params, stripe_price_id: finalStripePriceId },
         });
         if (fn2.error) return { success: false, error: fn2.error.message || 'Erro ao preparar checkout' };
         return { success: true, url: (fn2.data as any)?.checkout_url || (fn2.data as any)?.url };

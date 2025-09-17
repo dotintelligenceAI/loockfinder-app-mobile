@@ -1,6 +1,7 @@
-import { PlanLockNotice } from '@/components';
+import { FeatureAccessNotice, PlanLockNotice, UpgradeModal } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 import { chatService } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
@@ -41,6 +42,13 @@ interface ChatHistory {
 export default function ChatIAScreen() {
   const { t } = useI18n();
   const { user } = useAuth();
+  
+  // Hook para controle de acesso à feature
+  const featureAccess = useFeatureAccess(
+    'Chat com IA',
+    'Converse com nossa IA especializada em moda e estilo para receber dicas personalizadas.',
+    'chatbubble-ellipses'
+  );
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -254,6 +262,8 @@ export default function ChatIAScreen() {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages, isTyping]);
 
+  // O modal será mostrado automaticamente pelo hook após 5 segundos para usuários gratuitos
+
   const renderMessage = (message: Message, index: number) => (
     <Animatable.View
       key={message.id}
@@ -336,8 +346,10 @@ export default function ChatIAScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+      {featureAccess.canAccess ? (
+        <>
+          {/* Header */}
+          <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.aiInfo}>
             <View style={styles.aiAvatarLarge}>
@@ -494,6 +506,23 @@ export default function ChatIAScreen() {
           )}
         </SafeAreaView>
       </Modal>
+        </>
+      ) : (
+        <FeatureAccessNotice
+          featureName="Chat com IA"
+          onUpgrade={featureAccess.handleUpgrade}
+          onGoHome={featureAccess.handleGoHome}
+        />
+      )}
+
+      {/* Modal de Upgrade */}
+      <UpgradeModal
+        visible={featureAccess.isUpgradeModalVisible}
+        onClose={featureAccess.hideUpgradeModal}
+        featureName="Chat com IA"
+        featureDescription="Converse com nossa IA especializada em moda e estilo para receber dicas personalizadas."
+        iconName="chatbubble-ellipses"
+      />
     </SafeAreaView>
   );
 }

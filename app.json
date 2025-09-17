@@ -42,40 +42,25 @@
     },
     "plugins": [
       "expo-router",
-      "expo-web-browser"
-    ]
-  },
-  "web": {
-    "bundler": "metro",
-    "output": "static",
-    "favicon": "./assets/images/icon-app.png"
-  },
-  "plugins": [
-    "expo-router",
-    [
-      "expo-splash-screen",
-      {
-        "image": "./assets/images/icon-app.png",
-        "imageWidth": 200,
-        "resizeMode": "contain",
-        "backgroundColor": "#ffffff"
-      }
-    ]
-  ],
-  "experiments": {
-    "typedRoutes": true
-  },
-  "extra": {
-    "router": {},
-    "eas": {
-      "projectId": "3f689b8a-86a1-4e20-8674-13f05630422a"
-    }
-  },
-  "owner": "asaphcruz",
-  "runtimeVersion": {
-    "policy": "appVersion"
-  },
-  "updates": {
-    "url": "https://u.expo.dev/3f689b8a-86a1-4e20-8674-13f05630422a"
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/icon-app.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/icon-app.png"
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "owner": "asaphcruz"
   }
 }

@@ -6,6 +6,7 @@ import { categoriesService, favoritesService, subcategoriesService, subscription
 import { Look, looksService } from '@/services/looksService';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -48,6 +49,7 @@ export default function HomeScreen() {
   const [visibleItems, setVisibleItems] = useState<Set<string>>(new Set());
   const [favoritedLooks, setFavoritedLooks] = useState<Set<string>>(new Set());
   const [selectedLookId, setSelectedLookId] = useState<string | null>(null);
+  const [isFreeUser, setIsFreeUser] = useState<boolean>(true);
 
   const onViewableItemsChanged = React.useRef(({
     viewableItems
@@ -67,7 +69,9 @@ export default function HomeScreen() {
       if (user?.id) {
         const res = await subscriptionsService.getProfileWithPlan(user.id);
         if (res.success) {
-          const isFree = res.data?.subscription_status === 'free';
+          // Usuário é gratuito se tem plano free E status free
+          const isFree = res.data?.plan?.slug === 'free' && res.data?.subscription_status === 'free';
+          setIsFreeUser(isFree);
           setIsSearchEnabled(!isFree);
           if (isFree) setFreeReloadsLeft(3);
           else setFreeReloadsLeft(Number.MAX_SAFE_INTEGER);
@@ -128,9 +132,9 @@ export default function HomeScreen() {
       showPreloader('Carregando looks...');
       let data: Look[] = [];
       if (selectedCategory && selectedCategory !== 'todos') {
-        data = await looksService.getLooksByCategory(selectedCategory);
+        data = await looksService.getLooksByCategory(selectedCategory, user?.id);
       } else {
-        data = await looksService.getLooks();
+        data = await looksService.getLooks(user?.id);
       }
       const paginated = data.slice(0, looksLimit);
       setLooks(paginated);
@@ -147,7 +151,7 @@ export default function HomeScreen() {
   const loadLooksBySubcategory = async (subcategoryId: string) => {
     try {
       setLoading(true);
-      const data = await looksService.getLooksBySubcategory(subcategoryId);
+      const data = await looksService.getLooksBySubcategory(subcategoryId, user?.id);
       const paginated = data.slice(0, looksLimit);
       setLooks(paginated);
       setHasMore(data.length > paginated.length);
@@ -189,13 +193,13 @@ export default function HomeScreen() {
       let collected: Look[] = [];
       for (const subId of uniqueSubIds) {
         try {
-          const ls = await looksService.getLooksBySubcategory(subId);
+          const ls = await looksService.getLooksBySubcategory(subId, user?.id);
           collected = collected.concat(ls);
         } catch {}
       }
       for (const catId of uniqueCatIds) {
         try {
-          const lc = await looksService.getLooksByCategory(catId);
+          const lc = await looksService.getLooksByCategory(catId, user?.id);
           collected = collected.concat(lc);
         } catch {}
       }
@@ -431,9 +435,9 @@ export default function HomeScreen() {
                 editable={isSearchEnabled}
               />
             </View>
-            <TouchableOpacity style={styles.filterButton}>
+            {/* <TouchableOpacity style={styles.filterButton}>
               <Ionicons name="options-outline" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
           {!isSearchEnabled && (
             <PlanLockNotice style={{ marginTop: 8 }} variant="compact" />
@@ -507,29 +511,50 @@ export default function HomeScreen() {
                 <Text style={styles.loadingText}>Carregando looks...</Text>
               </View>
             ) : null}
-            <TouchableOpacity 
-              style={styles.seeMoreButton} 
-              onPress={() => {
-                if (freeReloadsLeft <= 0) return;
-                setLooks(prev => [...prev].sort(() => Math.random() - 0.5));
-                setFreeReloadsLeft(prev => prev - 1);
-              }}
-              disabled={freeReloadsLeft <= 0}
-            >
-              <LinearGradient
-                colors={['#1a1a1a', '#333333']}
-                style={styles.seeMoreGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.seeMoreText}>
-                  {freeReloadsLeft === Number.MAX_SAFE_INTEGER
-                    ? t('tabs.home.loadMore.button')
-                    : t('tabs.home.loadMore.remaining').replace('{count}', String(Math.max(freeReloadsLeft, 0)))}
+            
+            {/* Mensagem de upgrade para usuários free quando visualizando categoria */}
+            {isFreeUser && (selectedCategory && selectedCategory !== 'todos') && (
+              <View style={styles.upgradeNoticeContainer}>
+                <Text style={styles.upgradeNoticeText}>
+                  {t('tabs.home.upgrade.categoryMessage')}
                 </Text>
-                <Ionicons name="arrow-down" size={16} color="#FFFFFF" />
-              </LinearGradient>
-            </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.upgradeNoticeButton}
+                  onPress={() => router.push('/auth/plans' as any)}
+                >
+                  <Text style={styles.upgradeNoticeButtonText}>
+                    {t('tabs.home.upgrade.upgradeButton')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Botão "Carregar mais" apenas para usuários premium ou quando não está em categoria específica */}
+            {(!isFreeUser || !selectedCategory || selectedCategory === 'todos') && (
+              <TouchableOpacity 
+                style={styles.seeMoreButton} 
+                onPress={() => {
+                  if (freeReloadsLeft <= 0) return;
+                  setLooks(prev => [...prev].sort(() => Math.random() - 0.5));
+                  setFreeReloadsLeft(prev => prev - 1);
+                }}
+                disabled={freeReloadsLeft <= 0}
+              >
+                <LinearGradient
+                  colors={['#1a1a1a', '#333333']}
+                  style={styles.seeMoreGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.seeMoreText}>
+                    {freeReloadsLeft === Number.MAX_SAFE_INTEGER
+                      ? t('tabs.home.loadMore.button')
+                      : t('tabs.home.loadMore.remaining').replace('{count}', String(Math.max(freeReloadsLeft, 0)))}
+                  </Text>
+                  <Ionicons name="arrow-down" size={16} color="#FFFFFF" />
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
           </>
         }
         refreshControl={
@@ -643,6 +668,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   searchContainer: {
+    paddingBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -711,7 +737,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   subcategoryButtonActive: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: '#1a1a1a',
   },
   subcategoryText: {
     color: '#666666',
@@ -870,6 +896,36 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: 20,
+  },
+
+  // Estilos para mensagem de upgrade
+  upgradeNoticeContainer: {
+    backgroundColor: '#F8F9FA',
+    marginHorizontal: 16,
+    marginVertical: 20,
+    padding: 20,
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  upgradeNoticeText: {
+    fontSize: 14,
+    color: '#666666',
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  upgradeNoticeButton: {
+    backgroundColor: '#1a1a1a',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  upgradeNoticeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
   },
 
 });

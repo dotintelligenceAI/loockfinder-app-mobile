@@ -102,6 +102,10 @@
       "loadMore": {
         "button": "Carregar novos looks",
         "remaining": "Carregar novos looks ({count} restantes)"
+      },
+      "upgrade": {
+        "categoryMessage": "Faça upgrade para ver todos os looks desta categoria",
+        "upgradeButton": "Fazer Upgrade"
       }
     },
     "chat": {
@@ -369,8 +373,26 @@
       "pleaseWait": "Por favor, aguarde..."
     },
     "planLock": {
-      "freeMessage": "Você está no plano Finder Free",
-      "upgradeCta": "Fazer upgrade para acessar"
+      "freeMessage": "Plano Finder Free",
+      "upgradeCta": "Upgrade"
+    },
+    "featureAccess": {
+      "title": "Acesso Limitado",
+      "description": "{featureName} está disponível apenas para usuários premium",
+      "upgradeButton": "Fazer Upgrade",
+      "homeButton": "Voltar para Home"
+    },
+    "upgradeModal": {
+      "title": "Desbloqueie {featureName}",
+      "premiumFeatureMessage": "Esta feature está disponível apenas para usuários premium",
+      "features": {
+        "unlimitedAccess": "Acesso ilimitado a {featureName}",
+        "aiPersonalizedLooks": "Looks personalizados com IA",
+        "unlimitedFavorites": "Favoritos ilimitados",
+        "prioritySupport": "Suporte prioritário"
+      },
+      "upgradeButton": "Fazer Upgrade",
+      "homeButton": "Voltar para Home"
     }
   },
   "errors": {

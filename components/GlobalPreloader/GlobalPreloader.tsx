@@ -1,6 +1,6 @@
-import React from 'react';
-import { Preloader } from '@/components';
 import { usePreloader } from '@/contexts/PreloaderContext';
+import React from 'react';
+import { Preloader } from '../Preloader';
 
 export default function GlobalPreloader() {
   const { preloader } = usePreloader();

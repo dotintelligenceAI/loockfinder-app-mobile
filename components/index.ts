@@ -1,5 +1,6 @@
 export { Button } from './Button';
 export { CustomTabBar } from './CustomTabBar';
+export { FeatureAccessNotice } from './FeatureAccessNotice';
 export { FinderLogo } from './FinderLogo';
 export { FloatingChatButton } from './FloatingChatButton';
 export { Gallery4 } from './Gallery4';
@@ -13,4 +14,5 @@ export { PlanLockNotice } from './PlanLockNotice';
 export { Preloader } from './Preloader';
 export { ProtectedRoute } from './ProtectedRoute';
 export { Toast } from './Toast';
+export { UpgradeModal } from './UpgradeModal';
 

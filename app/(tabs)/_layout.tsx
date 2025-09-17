@@ -1,4 +1,4 @@
-import { CustomTabBar, ProtectedRoute } from '@/components';
+import { ProtectedRoute } from '@/components';
 import { useTabBarVisibility } from '@/contexts/TabBarVisibilityContext';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -25,8 +25,6 @@ function TabLayoutContent() {
         <Tabs
           screenOptions={{
             headerShown: false,
-            // Usa a TabBar personalizada com traduções
-            tabBar: (props) => <CustomTabBar {...props} />,
             tabBarActiveTintColor: '#FFFFFF',
             tabBarInactiveTintColor: '#666666',
             tabBarStyle: {

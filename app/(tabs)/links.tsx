@@ -1,7 +1,8 @@
-import { PlanLockNotice } from '@/components';
+import { FeatureAccessNotice, UpgradeModal } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
-import { ShoppingCategory, ShoppingLink, shoppingLinksService, subscriptionsService } from '@/services';
+import { useFeatureAccess } from '@/hooks/useFeatureAccess';
+import { Currency, geolocationService, ShoppingCategory, ShoppingLink, shoppingLinksService, subscriptionsService } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
@@ -29,6 +30,13 @@ interface LinkItem extends ShoppingLink {
 export default function LinksScreen() {
   const { user } = useAuth();
   const { t } = useI18n();
+  
+  // Hook para controle de acesso à feature
+  const featureAccess = useFeatureAccess(
+    'Links de Compra',
+    'Acesse milhares de links de compra com preços exclusivos e ofertas especiais.',
+    'link'
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
   const [categories, setCategories] = useState<ShoppingCategory[]>([]);
@@ -68,6 +76,11 @@ export default function LinksScreen() {
 
   useEffect(() => {
     const loadByCategory = async () => {
+      // Verificar se o usuário tem acesso
+      if (!featureAccess.canAccess) {
+        return; // O modal será mostrado automaticamente pelo hook após 5 segundos
+      }
+
       setLoading(true);
       try {
         const lk = await shoppingLinksService.getLinksByCategory(selectedCategory);
@@ -80,7 +93,7 @@ export default function LinksScreen() {
       }
     };
     loadByCategory();
-  }, [selectedCategory]);
+  }, [selectedCategory, featureAccess.canAccess]);
 
   const mapLinksForDisplay = (data: ShoppingLink[]): LinkItem[] => {
     return data.map((l) => ({
@@ -99,7 +112,8 @@ export default function LinksScreen() {
   const enrichWithPreviewImages = async (items: LinkItem[]): Promise<LinkItem[]> => items;
 
   const formatCurrency = (value: number, currency: string) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency }).format(value);
+    // Usar o serviço de geolocalização para formatação adequada
+    return geolocationService.formatCurrency(value, (currency as Currency) || 'BRL');
   };
 
   const onRefresh = async () => {
@@ -269,10 +283,21 @@ export default function LinksScreen() {
           showsVerticalScrollIndicator={false}
         />
       ) : (
-        <View style={{ padding: 20 }}>
-          <PlanLockNotice />
-        </View>
+        <FeatureAccessNotice
+          featureName="Links de Compra"
+          onUpgrade={featureAccess.handleUpgrade}
+          onGoHome={featureAccess.handleGoHome}
+        />
       )}
+
+      {/* Modal de Upgrade */}
+      <UpgradeModal
+        visible={featureAccess.isUpgradeModalVisible}
+        onClose={featureAccess.hideUpgradeModal}
+        featureName="Links de Compra"
+        featureDescription="Acesse milhares de links de compra com preços exclusivos e ofertas especiais."
+        iconName="link"
+      />
     </SafeAreaView>
   );
 }

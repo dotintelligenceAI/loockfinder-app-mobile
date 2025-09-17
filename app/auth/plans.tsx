@@ -2,7 +2,7 @@ import { Button, ProtectedRoute } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { usePreloader } from '@/contexts/PreloaderContext';
-import { SubscriptionPlan, subscriptionsService } from '@/services';
+import { Currency, GeolocationData, geolocationService, SubscriptionPlan, subscriptionsService } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -16,14 +16,60 @@ function PlansContent() {
   const [loading, setLoading] = useState(false);
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [detailsPlan, setDetailsPlan] = useState<SubscriptionPlan | null>(null);
+  const [location, setLocation] = useState<GeolocationData | null>(null);
+  const [detectingLocation, setDetectingLocation] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const res = await subscriptionsService.getActivePlans();
-      if (res.success) setPlans(res.data);
+      try {
+        setDetectingLocation(true);
+        console.log('🔍 Detectando localização do usuário...');
+        
+        // Detectar localização do usuário
+        const detectedLocation = await geolocationService.detectLocation();
+        console.log('📍 Localização detectada:', {
+          country: detectedLocation.country,
+          region: detectedLocation.region,
+          currency: detectedLocation.currency
+        });
+        
+        setLocation(detectedLocation);
+        
+        // Salvar localização no perfil do usuário (opcional)
+        if (user?.id) {
+          await geolocationService.saveUserLocation(user.id, detectedLocation);
+        }
+        
+        // Carregar planos baseados na região detectada
+        console.log(`💳 Carregando planos para região: ${detectedLocation.region}`);
+        const res = await subscriptionsService.getActivePlans(detectedLocation.region);
+        
+        if (res.success && res.data.length > 0) {
+          console.log(`✅ Encontrados ${res.data.length} planos para ${detectedLocation.region}`);
+          setPlans(res.data);
+        } else {
+          console.log(`⚠️ Nenhum plano encontrado para ${detectedLocation.region}, usando fallback BR`);
+          // Fallback: carregar planos do Brasil se não encontrar para a região
+          const fallbackRes = await subscriptionsService.getActivePlans('BR');
+          if (fallbackRes.success) {
+            setPlans(fallbackRes.data);
+            console.log(`🔄 Carregados ${fallbackRes.data.length} planos do Brasil como fallback`);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar planos:', error);
+        // Fallback: carregar planos do Brasil
+        const fallbackRes = await subscriptionsService.getActivePlans('BR');
+        if (fallbackRes.success) {
+          setPlans(fallbackRes.data);
+          console.log('🔄 Usando planos do Brasil como fallback devido ao erro');
+        }
+      } finally {
+        setDetectingLocation(false);
+      }
     };
     load();
-  }, []);
+  }, [user?.id]);
 
   const handleSelectFree = async () => {
     setLoading(true);
@@ -46,7 +92,8 @@ function PlansContent() {
       const res = await subscriptionsService.prepareCheckout(
         plan.id,
         user?.id,
-        plan.stripe_price_id || undefined
+        plan.stripe_price_id || undefined,
+        location?.region
       );
       if (res.success && res.url) {
         hidePreloader();
@@ -78,7 +125,12 @@ function PlansContent() {
           </View>
         )}
       </View>
-      <Text style={styles.planPrice}>{item.price_cents === 0 ? 'Grátis' : `R$ ${(item.price_cents / 100).toFixed(2)}`}</Text>
+      <Text style={styles.planPrice}>
+        {item.price_cents === 0 
+          ? 'Grátis' 
+          : geolocationService.formatCurrency(item.price_cents / 100, (item.currency as Currency) || 'BRL')
+        }
+      </Text>
       <View style={styles.actionsRow}>
         {item.slug === 'free' ? (
           <Button title="Continuar Grátis" onPress={handleSelectFree} loading={loading} />
@@ -101,7 +153,27 @@ function PlansContent() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Escolha seu plano</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Escolha seu plano</Text>
+        
+        {/* Indicador de localização */}
+        {location && (
+          <View style={styles.locationIndicator}>
+            <Ionicons name="location" size={16} color="#4CAF50" />
+            <Text style={styles.locationText}>
+              {location.country} • {location.currency}
+            </Text>
+          </View>
+        )}
+        
+        {detectingLocation && (
+          <View style={styles.locationIndicator}>
+            <Ionicons name="location-outline" size={16} color="#FF9800" />
+            <Text style={styles.locationText}>Detectando sua localização...</Text>
+          </View>
+        )}
+      </View>
+      
       <FlatList
         data={plans}
         keyExtractor={(p) => p.id}
@@ -192,7 +264,30 @@ export default function PlansScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: '800', padding: 20 },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
+    alignItems: 'center'
+  },
+  title: { fontSize: 24, fontWeight: '800', marginBottom: 10 },
+  locationIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F8FF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#E3F2FD'
+  },
+  locationText: {
+    fontSize: 13,
+    color: '#1976D2',
+    marginLeft: 6,
+    fontWeight: '600'
+  },
   planCard: {
     backgroundColor: '#fff',
     borderRadius: 16,

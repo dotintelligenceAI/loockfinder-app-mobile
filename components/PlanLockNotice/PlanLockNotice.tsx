@@ -51,7 +51,7 @@ export default function PlanLockNotice({
         <View style={styles.compactContent}>
           <View style={styles.compactLeft}>
             <View style={styles.iconContainer}>
-              <Ionicons name="lock-closed" size={16} color="#6B7280" />
+              <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
             </View>
             <Text style={styles.compactText}>
               {t('components.planLock.freeMessage')}
@@ -71,7 +71,7 @@ export default function PlanLockNotice({
     return (
       <View style={[getContainerStyle(), style]}>
         <LinearGradient
-          colors={['#667EEA', '#764BA2']}
+          colors={['#000000', '#1a1a1a']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradientContainer}
@@ -90,7 +90,7 @@ export default function PlanLockNotice({
               <Text style={styles.premiumButtonText}>
                 {t('components.planLock.upgradeCta')}
               </Text>
-              <Ionicons name="arrow-forward" size={16} color="#667EEA" />
+              <Ionicons name="arrow-forward" size={16} color="#000000" />
             </TouchableOpacity>
           </View>
         </LinearGradient>
@@ -103,7 +103,7 @@ export default function PlanLockNotice({
       <View style={styles.content}>
         <View style={styles.header}>
           <View style={styles.iconContainer}>
-            <Ionicons name="lock-closed" size={20} color="#6B7280" />
+            <Ionicons name="lock-closed" size={20} color="#FFFFFF" />
           </View>
           <View style={styles.textContainer}>
             <Text style={styles.title}>Recurso Premium</Text>
@@ -113,11 +113,11 @@ export default function PlanLockNotice({
           </View>
         </View>
         
-        <TouchableOpacity style={styles.button} onPress={handlePress}>
+          <TouchableOpacity style={styles.button} onPress={handlePress}>
           <Text style={styles.buttonText}>
             {t('components.planLock.upgradeCta')}
           </Text>
-          <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+          <Ionicons name="arrow-forward" size={16} color="#000000" />
         </TouchableOpacity>
       </View>
     </View>
@@ -127,9 +127,9 @@ export default function PlanLockNotice({
 const styles = StyleSheet.create({
   // Container padrão
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#000000',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#333333',
     borderRadius: 16,
     padding: 20,
     marginVertical: 8,
@@ -212,16 +212,16 @@ const styles = StyleSheet.create({
   },
 
   premiumButtonText: {
-    color: '#667EEA',
+    color: '#000000',
     fontSize: 14,
     fontWeight: '600',
   },
 
   // Container compacto
   compactContainer: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#1a1a1a',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#333333',
     borderRadius: 12,
     padding: 12,
     marginVertical: 4,
@@ -241,21 +241,22 @@ const styles = StyleSheet.create({
   },
 
   compactText: {
-    color: '#6B7280',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '500',
     flex: 1,
+    opacity: 0.8,
   },
 
   compactButton: {
-    backgroundColor: '#374151',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
 
   compactButtonText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -275,7 +276,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -286,21 +287,22 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: '#111827',
+    color: '#FFFFFF',
     fontSize: isSmallScreen ? 16 : 18,
     fontWeight: '700',
     lineHeight: 24,
   },
 
   subtitle: {
-    color: '#6B7280',
+    color: '#FFFFFF',
     fontSize: isSmallScreen ? 13 : 14,
     lineHeight: 20,
     fontWeight: '500',
+    opacity: 0.8,
   },
 
   button: {
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -324,7 +326,7 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 14,
     fontWeight: '600',
     letterSpacing: 0.5,

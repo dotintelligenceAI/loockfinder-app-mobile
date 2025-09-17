@@ -1,6 +1,8 @@
+import { FeatureAccessNotice, UpgradeModal } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { usePreloader } from '@/contexts/PreloaderContext';
+import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 import { CupomWithStore, cuponsService, Store } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,6 +29,13 @@ export default function CuponsScreen() {
   const { user } = useAuth();
   const { t, currentLanguage } = useI18n();
   const { showPreloader, hidePreloader } = usePreloader();
+  
+  // Hook para controle de acesso à feature
+  const featureAccess = useFeatureAccess(
+    'Cupons de Desconto',
+    'Acesse cupons exclusivos com descontos de até 70% em suas lojas favoritas.',
+    'pricetag'
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('todos');
   const [cupons, setCupons] = useState<CouponItem[]>([]);
@@ -183,9 +192,14 @@ export default function CuponsScreen() {
 
   // Carregar cupons e categorias na inicialização
   useEffect(() => {
+    // Verificar se o usuário tem acesso
+    if (!featureAccess.canAccess) {
+      return; // O modal será mostrado automaticamente pelo hook após 5 segundos
+    }
+
     loadCategories();
     loadCupons();
-  }, []);
+  }, [featureAccess.canAccess]);
 
   // Carregar cupons quando categoria mudar
   useEffect(() => {
@@ -426,35 +440,52 @@ export default function CuponsScreen() {
       </View>
 
       {/* Lista de Cupons */}
-      <FlatList
-        data={cupons}
-        keyExtractor={(item) => item.id}
-        renderItem={renderCouponItem}
-        contentContainerStyle={styles.couponsList}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#1a1a1a']}
-            tintColor="#1a1a1a"
-          />
-        }
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          loading ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>{t('tabs.cupons.loadingCoupons')}</Text>
-            </View>
-          ) : error ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>{error}</Text>
-            </View>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>{t('tabs.cupons.noCouponsFound')}</Text>
-            </View>
-          )
-        }
+      {featureAccess.canAccess ? (
+        <FlatList
+          data={cupons}
+          keyExtractor={(item) => item.id}
+          renderItem={renderCouponItem}
+          contentContainerStyle={styles.couponsList}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#1a1a1a']}
+              tintColor="#1a1a1a"
+            />
+          }
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            loading ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>{t('tabs.cupons.loadingCoupons')}</Text>
+              </View>
+            ) : error ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>{error}</Text>
+              </View>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>{t('tabs.cupons.noCouponsFound')}</Text>
+              </View>
+            )
+          }
+        />
+      ) : (
+        <FeatureAccessNotice
+          featureName="Cupons de Desconto"
+          onUpgrade={featureAccess.handleUpgrade}
+          onGoHome={featureAccess.handleGoHome}
+        />
+      )}
+
+      {/* Modal de Upgrade */}
+      <UpgradeModal
+        visible={featureAccess.isUpgradeModalVisible}
+        onClose={featureAccess.hideUpgradeModal}
+        featureName="Cupons de Desconto"
+        featureDescription="Acesse cupons exclusivos com descontos de até 70% em suas lojas favoritas."
+        iconName="pricetag"
       />
     </SafeAreaView>
   );
