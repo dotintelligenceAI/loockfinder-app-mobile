@@ -1,7 +1,7 @@
 import { ProtectedRoute } from '@/components';
+import { useI18n } from '@/contexts/I18nContext';
 import { useTabBarVisibility } from '@/contexts/TabBarVisibilityContext';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Animated, Platform } from 'react-native';
@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 function TabLayoutContent() {
   const { visible } = useTabBarVisibility();
+  const { t } = useI18n();
   const translateY = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -25,12 +26,12 @@ function TabLayoutContent() {
         <Tabs
           screenOptions={{
             headerShown: false,
-            tabBarActiveTintColor: '#FFFFFF',
-            tabBarInactiveTintColor: '#666666',
+            tabBarActiveTintColor: '#1a1a1a',
+            tabBarInactiveTintColor: '#999999',
             tabBarStyle: {
-              backgroundColor: 'transparent',
+              backgroundColor: '#FFFFFF',
               borderTopWidth: 1,
-              borderTopColor: '#333333',
+              borderTopColor: '#E5E5E5',
               height: Platform.OS === 'ios' ? 90 : 70,
               paddingBottom: Platform.OS === 'ios' ? 30 : 10,
               paddingTop: 10,
@@ -48,19 +49,13 @@ function TabLayoutContent() {
               fontSize: 12,
               fontWeight: '600',
             },
-            tabBarBackground: () => (
-              <BlurView
-                intensity={60}
-                tint="dark"
-                style={{ flex: 1, borderTopLeftRadius: 18, borderTopRightRadius: 18 }}
-              />
-            ),
+            tabBarBackground: () => null,
           }}
         >
           <Tabs.Screen
             name="home"
             options={{
-              title: 'Home',
+              title: t('tabs.home.title'),
               tabBarIcon: ({ color, focused }) => (
                 <Ionicons 
                   name={focused ? 'home' : 'home-outline'} 
@@ -73,7 +68,7 @@ function TabLayoutContent() {
           <Tabs.Screen
             name="links"
             options={{
-              title: 'Links',
+              title: t('tabs.links.title'),
               tabBarIcon: ({ color, focused }) => (
                 <Ionicons 
                   name={focused ? 'link' : 'link-outline'} 
@@ -86,7 +81,7 @@ function TabLayoutContent() {
           <Tabs.Screen
             name="cupons"
             options={{
-              title: 'Cupons',
+              title: t('tabs.cupons.title'),
               tabBarIcon: ({ color, focused }) => (
                 <Ionicons 
                   name={focused ? 'pricetags' : 'pricetags-outline'} 
@@ -99,7 +94,7 @@ function TabLayoutContent() {
           <Tabs.Screen
             name="chat-ia"
             options={{
-              title: 'Chat IA',
+              title: t('tabs.chat.title'),
               tabBarIcon: ({ color, focused }) => (
                 <Ionicons 
                   name={focused ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline'} 
@@ -112,7 +107,7 @@ function TabLayoutContent() {
           <Tabs.Screen
             name="perfil"
             options={{
-              title: 'Perfil',
+              title: t('tabs.perfil.title'),
               tabBarIcon: ({ color, focused }) => (
                 <Ionicons 
                   name={focused ? 'person' : 'person-outline'} 

@@ -35,11 +35,11 @@ export default function CustomTabBar({ state, descriptors, navigation }: CustomT
   // Definir ordem e configuração das abas com traduções
   // ATENÇÃO: nomes devem bater com os arquivos/rotas em app/(tabs)
   const tabsConfig: TabItem[] = [
-    { name: 'home', title: t('tabs.home.title'), icon: 'home-outline' },
-    { name: 'links', title: t('tabs.links.title'), icon: 'link-outline' },
-    { name: 'cupons', title: t('tabs.cupons.title'), icon: 'pricetags-outline' },
-    { name: 'chat-ia', title: t('tabs.chat.title'), icon: 'chatbubble-outline' },
-    { name: 'perfil', title: t('tabs.perfil.title'), icon: 'person-outline' },
+    { name: '', title: t('tabs.home.title'), icon: 'home-outline' },
+    { name: '', title: t('tabs.links.title'), icon: 'link-outline' },
+    { name: '', title: t('tabs.cupons.title'), icon: 'pricetags-outline' },
+    { name: '', title: t('tabs.chat.title'), icon: 'chatbubble-outline' },
+    { name: '', title: t('tabs.perfil.title'), icon: 'person-outline' },
   ];
 
   return (

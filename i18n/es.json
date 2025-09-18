@@ -222,7 +222,9 @@
       "storeNameDefault": "Tienda",
       "validUntil": "Válido hasta",
       "useButtonText": "Usar Cupón",
-      "usedBadgeText": "Usado"
+      "usedBadgeText": "Usado",
+      "featureName": "Cupones de Descuento",
+      "featureDescription": "Accede a cupones exclusivos con descuentos de hasta 70% en tus tiendas favoritas."
     },
     "links": {
       "title": "Enlaces",
@@ -245,7 +247,9 @@
       "paywall": {
         "message": "Los enlaces de compras son exclusivos para suscriptores.",
         "cta": "Mejorar ahora"
-      }
+      },
+      "featureName": "Enlaces de Compra",
+      "featureDescription": "Accede a miles de enlaces de compra con precios exclusivos y ofertas especiales."
     },
     "perfil": {
       "title": "Perfil",
@@ -297,6 +301,42 @@
         "free": "Finder Free",
         "expires": "Vence el",
         "change": "Mejorar / Cambiar Plan"
+      },
+      "plans": {
+        "title": "Elige tu plan",
+        "currentPlan": "Plan actual",
+        "detectingLocation": "Detectando tu ubicación...",
+        "popular": "Popular",
+        "currentBadge": "Plan Actual",
+        "activePlan": "Plan Activo",
+        "free": "Gratis",
+        "continueFree": "Continuar Gratis",
+        "subscribeNow": "Suscribirse Ahora",
+        "skipForNow": "Omitir por ahora",
+        "planDetails": "Ver descripción del plan",
+        "modalTitle": "Detalles del plan",
+        "description": "Descripción",
+        "featuresIncluded": "Características incluidas",
+        "planLimits": "Límites del plan",
+        "dailyChatMessages": "Mensajes diarios del chat",
+        "maxFavorites": "Máximo de favoritos",
+        "shoppingLinksAccess": "Acceso a enlaces de compra",
+        "premiumLooks": "Looks premium",
+        "initialLooksHome": "Looks iniciales en Inicio",
+        "dailyLookReloads": "Recargas diarias de looks",
+        "yes": "Sí",
+        "no": "No",
+        "close": "Cerrar",
+        "updatingPlan": "Actualizando plan...",
+        "preparingCheckout": "Preparando checkout...",
+        "cancelPlan": "Cancelar plan",
+        "cancelPlanTitle": "Cancelar Suscripción",
+        "cancelPlanMessage": "¿Estás seguro de que quieres cancelar tu suscripción? Perderás acceso a las funciones premium y volverás al plan gratuito.",
+        "cancelPlanConfirm": "Sí, cancelar",
+        "cancelPlanCancel": "Mantener suscripción",
+        "cancelingPlan": "Cancelando plan...",
+        "planCanceled": "¡Plan cancelado exitosamente!",
+        "cancelError": "Error al cancelar plan"
       },
       "logout": {
         "title": "Cerrar sesión",

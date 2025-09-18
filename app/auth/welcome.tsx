@@ -12,11 +12,11 @@ export default function WelcomeScreen() {
   const { t } = useI18n();
 
   const handleLogin = () => {
-    router.push('/auth/login' as any);
+    router.push('/auth/auth-unified' as any);
   };
 
   const handleSignUp = () => {
-    router.push('/auth/signup' as any);
+    router.push('/auth/auth-unified' as any);
   };
 
   const handleGuestAccess = () => {

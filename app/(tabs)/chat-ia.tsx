@@ -9,6 +9,7 @@ import {
   Alert,
   Dimensions,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -276,7 +277,11 @@ export default function ChatIAScreen() {
     >
       {!message.isUser && (
         <View style={styles.aiAvatar}>
-          <Ionicons name="sparkles" size={16} color="#FFFFFF" />
+          <Image 
+            source={require('@/assets/images/avatarIA.jpg')}
+            style={styles.aiAvatarImageSmall}
+            resizeMode="cover"
+          />
         </View>
       )}
       
@@ -353,12 +358,16 @@ export default function ChatIAScreen() {
         <View style={styles.headerContent}>
           <View style={styles.aiInfo}>
             <View style={styles.aiAvatarLarge}>
-              <Ionicons name="sparkles" size={24} color="#FFFFFF" />
+              <Image 
+                source={require('@/assets/images/avatarIA.jpg')}
+                style={styles.aiAvatarImage}
+                resizeMode="cover"
+              />
             </View>
             <View>
               <Text style={styles.aiName}>{t('tabs.chat.aiName')}</Text>
               <View style={styles.statusContainer}>
-                <View style={styles.onlineIndicator} />
+                {/* <View style={styles.onlineIndicator} /> */}
                 <Text style={styles.aiStatus}>{t('tabs.chat.aiStatus')}</Text>
               </View>
             </View>
@@ -402,7 +411,11 @@ export default function ChatIAScreen() {
               style={[styles.messageContainer, styles.aiMessage]}
             >
               <View style={styles.aiAvatar}>
-                <Ionicons name="sparkles" size={16} color="#FFFFFF" />
+                <Image 
+                  source={require('@/assets/images/avatarIA.jpg')}
+                  style={styles.aiAvatarImageSmall}
+                  resizeMode="cover"
+                />
               </View>
               <View style={[styles.messageBubble, styles.aiBubble]}>
                 <View style={styles.typingIndicator}>
@@ -533,7 +546,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   header: {
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
     paddingVertical: 20,
@@ -557,6 +569,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  aiAvatarImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
   aiName: {
     fontSize: 18,
@@ -622,6 +640,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 8,
     marginTop: 4,
+    overflow: 'hidden',
+  },
+  aiAvatarImageSmall: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
   messageBubble: {
     maxWidth: '75%',
@@ -706,8 +730,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   inputContainer: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
     paddingHorizontal: 20,
     paddingVertical: 16,

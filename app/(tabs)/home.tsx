@@ -7,7 +7,7 @@ import { Look, looksService } from '@/services/looksService';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -36,11 +36,10 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [looksLimit, setLooksLimit] = useState(50);
-  const [freeReloadsLeft, setFreeReloadsLeft] = useState<number>(3);
+  const [looksLimit, setLooksLimit] = useState(100);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchEnabled, setIsSearchEnabled] = useState(true);
-  const PAGE_SIZE = 12;
+  const PAGE_SIZE = 100;
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [subcategories, setSubcategories] = useState<Gallery4Item[]>([]);
@@ -73,8 +72,6 @@ export default function HomeScreen() {
           const isFree = res.data?.plan?.slug === 'free' && res.data?.subscription_status === 'free';
           setIsFreeUser(isFree);
           setIsSearchEnabled(!isFree);
-          if (isFree) setFreeReloadsLeft(3);
-          else setFreeReloadsLeft(Number.MAX_SAFE_INTEGER);
         }
       }
     })();
@@ -90,22 +87,22 @@ export default function HomeScreen() {
     }
   }, [selectedSubcategory, searchQuery]);
 
-  useEffect(() => {
+  // Função para executar busca manual
+  const handleSearch = async () => {
     if (!isSearchEnabled) return;
     const query = searchQuery.trim();
-    const handler = setTimeout(() => {
-      (async () => {
-        if (query.length === 0) {
-          if (selectedSubcategory) await loadLooksBySubcategory(selectedSubcategory);
-          else await loadLooks(true);
-          return;
-        }
+    
+    if (query.length === 0) {
+      if (selectedSubcategory) await loadLooksBySubcategory(selectedSubcategory);
+      else await loadLooks(true);
+      return;
+    }
 
-        await performSearch(query);
-      })();
-    }, 350);
-    return () => clearTimeout(handler);
-  }, [searchQuery, isSearchEnabled, looksLimit, selectedSubcategory]);
+    // Só buscar se tiver pelo menos 3 caracteres
+    if (query.length >= 3) {
+      await performIntelligentSearch(query);
+    }
+  };
 
   const loadCategories = async () => {
     try {
@@ -126,25 +123,40 @@ export default function HomeScreen() {
       if (reset) {
         setPage(1);
         setHasMore(true);
-        setLooksLimit(100);
+        setLooksLimit(PAGE_SIZE);
+        setLoading(true);
+        showPreloader('Carregando looks...');
+      } else {
+        // Para "carregar mais", não mostrar preloader para manter fluidez
+        setLoading(true);
       }
-      setLoading(true);
-      showPreloader('Carregando looks...');
+      
       let data: Look[] = [];
       if (selectedCategory && selectedCategory !== 'todos') {
         data = await looksService.getLooksByCategory(selectedCategory, user?.id);
       } else {
         data = await looksService.getLooks(user?.id);
       }
+      
       const paginated = data.slice(0, looksLimit);
-      setLooks(paginated);
+      
+      if (reset) {
+        // Reset: substitui todos os looks
+        setLooks(paginated);
+      } else {
+        // Carregar mais: adiciona novos looks aos existentes
+        const currentLooksCount = looks.length;
+        const newLooks = paginated.slice(currentLooksCount);
+        setLooks(prev => [...prev, ...newLooks]);
+      }
+      
       setHasMore(data.length > paginated.length);
       if (!reset) setPage((prev) => prev + 1);
     } catch (error) {
       console.error('Erro ao carregar looks:', error);
     } finally {
       setLoading(false);
-      hidePreloader();
+      if (reset) hidePreloader();
     }
   };
 
@@ -162,12 +174,130 @@ export default function HomeScreen() {
     }
   };
 
-  const performSearch = async (query: string) => {
+  const performIntelligentSearch = async (query: string) => {
     try {
       setLoading(true);
-      showPreloader('Carregando looks...');
+      showPreloader('Buscando looks...');
 
-      // Buscar categorias e subcategorias e filtrar por nome que contenha o termo
+      console.log('🔍 Busca inteligente para:', query);
+
+      // Criar dicionário de palavras-chave para matching inteligente
+      const keywords = {
+        // Ocasiões
+        casamento: ['ocasiao_uso'],
+        festa: ['ocasiao_uso'],
+        trabalho: ['ocasiao_uso'],
+        casual: ['ocasiao_uso'],
+        formal: ['ocasiao_uso'],
+        praia: ['ocasiao_uso'],
+        academia: ['ocasiao_uso'],
+        
+        // Cores
+        preto: ['cores'],
+        branco: ['cores'],
+        vermelho: ['cores'],
+        azul: ['cores'],
+        verde: ['cores'],
+        rosa: ['cores'],
+        amarelo: ['cores'],
+        
+        // Peças
+        vestido: ['partes'],
+        blusa: ['partes'],
+        calça: ['partes'],
+        saia: ['partes'],
+        shorts: ['partes'],
+        jaqueta: ['partes'],
+        blazer: ['partes'],
+        
+        // Acessórios
+        bolsa: ['acessorios'],
+        sapato: ['acessorios'],
+        óculos: ['acessorios'],
+        colar: ['acessorios'],
+        brinco: ['acessorios'],
+        
+        // Estilo/Tendências
+        vintage: ['tendencias'],
+        moderno: ['tendencias'],
+        boho: ['tendencias'],
+        minimalista: ['tendencias'],
+      };
+
+      // Analisar query para identificar categorias relevantes
+      const queryWords = query.toLowerCase().split(' ');
+      const matchedCategories = new Set<string>();
+      
+      queryWords.forEach(word => {
+        Object.entries(keywords).forEach(([keyword, categories]) => {
+          if (word.includes(keyword) || keyword.includes(word)) {
+            categories.forEach(cat => matchedCategories.add(cat));
+            console.log(`✅ Palavra "${word}" → Categoria "${categories.join(', ')}"`);
+          }
+        });
+      });
+
+      // Se não encontrou categorias específicas, buscar em todas
+      if (matchedCategories.size === 0) {
+        console.log('🔍 Busca geral em todas as categorias');
+        await performGeneralSearch(query);
+        return;
+      }
+
+      console.log('🎯 Categorias identificadas:', Array.from(matchedCategories));
+
+      // Buscar looks nas categorias identificadas
+      let collected: Look[] = [];
+      const categoriesRes = await categoriesService.getCategories();
+      const categoriesList = categoriesRes?.data || [];
+
+      for (const categoryType of matchedCategories) {
+        // Encontrar categoria pelo type
+        const category = categoriesList.find(cat => cat.type === categoryType);
+        if (category) {
+          try {
+            const categoryLooks = await looksService.getLooksByCategory(category.id, user?.id);
+            collected = collected.concat(categoryLooks);
+            
+            // Buscar também nas subcategorias
+            const subcats = await subcategoriesService.getSubcategoriesByCategory(category.id);
+            for (const subcat of subcats) {
+              // Verificar se subcategoria é relevante para a busca
+              if (subcats.some(s => queryWords.some(word => 
+                s.title?.toLowerCase().includes(word) || word.includes(s.title?.toLowerCase() || '')
+              ))) {
+                const subcatLooks = await looksService.getLooksBySubcategory(subcat.id, user?.id);
+                collected = collected.concat(subcatLooks);
+              }
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar looks da categoria ${categoryType}:`, error);
+          }
+        }
+      }
+
+      // Remover duplicados
+      const dedupMap = new Map<string, Look>();
+      collected.forEach((l) => dedupMap.set(l.id, l));
+      const deduped = Array.from(dedupMap.values());
+
+      console.log(`🎯 Encontrados ${deduped.length} looks para "${query}"`);
+
+      setLooks(deduped.slice(0, 100));
+      setHasMore(deduped.length > 100);
+      setLooksLimit(100);
+    } catch (error) {
+      console.error('Erro na busca inteligente:', error);
+      await performGeneralSearch(query);
+    } finally {
+      setLoading(false);
+      hidePreloader();
+    }
+  };
+
+  const performGeneralSearch = async (query: string) => {
+    try {
+      // Busca geral (código original como fallback)
       const matchedSubcatIds: string[] = [];
       const matchedCategoryIds: string[] = [];
 
@@ -209,14 +339,11 @@ export default function HomeScreen() {
       collected.forEach((l) => dedupMap.set(l.id, l));
       const deduped = Array.from(dedupMap.values());
 
-      const paginated = deduped.slice(0, looksLimit);
-      setLooks(paginated);
-      setHasMore(deduped.length > paginated.length);
+      setLooks(deduped.slice(0, 100));
+      setHasMore(deduped.length > 100);
+      setLooksLimit(100);
     } catch (error) {
       console.error('Erro ao buscar looks:', error);
-    } finally {
-      setLoading(false);
-      hidePreloader();
     }
   };
 
@@ -248,10 +375,19 @@ export default function HomeScreen() {
   };
 
   const handleLoadMore = () => {
+    // Só carregar mais se não estiver carregando e houver mais conteúdo
     if (!loading && hasMore) {
+      console.log('📱 Carregando mais 100 looks...');
+      setLooksLimit(prev => prev + PAGE_SIZE);
       loadLooks();
     }
   };
+
+  // Função otimizada para mudança de texto de busca
+  const handleSearchChange = useCallback((text: string) => {
+    if (!isSearchEnabled) return;
+    setSearchQuery(text);
+  }, [isSearchEnabled]);
 
   const checkIfLookIsFavorited = async (lookId: string) => {
     if (!user?.id) return false;
@@ -345,27 +481,6 @@ export default function HomeScreen() {
     );
   };
 
-  const renderSeeMore = () => (
-    hasMore && (
-      <TouchableOpacity 
-        style={styles.seeMoreButton} 
-        onPress={() => {
-          setLooksLimit(looksLimit + 100);
-          loadLooks();
-        }}
-      >
-        <LinearGradient
-          colors={['#1a1a1a', '#333333']}
-          style={styles.seeMoreGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <Text style={styles.seeMoreText}>Ver mais looks</Text>
-          <Ionicons name="arrow-down" size={16} color="#FFFFFF" />
-        </LinearGradient>
-      </TouchableOpacity>
-    )
-  );
 
   const renderSubcategories = () => (
     showSubcategories && subcategories.length > 0 && (
@@ -399,7 +514,7 @@ export default function HomeScreen() {
     )
   );
 
-  const renderHeader = () => (
+  const renderHeader = useCallback(() => (
     <View style={styles.headerWrapper}>
       {/* Header principal */}
       <LinearGradient
@@ -428,16 +543,21 @@ export default function HomeScreen() {
                 placeholder={t('tabs.home.searchPlaceholder')}
                 placeholderTextColor="#999999"
                 value={searchQuery}
-                onChangeText={(txt) => {
-                  if (!isSearchEnabled) return;
-                  setSearchQuery(txt);
-                }}
+                onChangeText={handleSearchChange}
                 editable={isSearchEnabled}
+                autoCorrect={false}
+                autoCapitalize="none"
+                returnKeyType="search"
+                onSubmitEditing={handleSearch}
               />
             </View>
-            {/* <TouchableOpacity style={styles.filterButton}>
-              <Ionicons name="options-outline" size={20} color="#FFFFFF" />
-            </TouchableOpacity> */}
+            <TouchableOpacity 
+              style={styles.searchButton}
+              onPress={handleSearch}
+              disabled={!isSearchEnabled || loading}
+            >
+              <Ionicons name="search" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
           {!isSearchEnabled && (
             <PlanLockNotice style={{ marginTop: 8 }} variant="compact" />
@@ -493,7 +613,7 @@ export default function HomeScreen() {
         </View>
       </View>
     </View>
-  );
+  ), [user, t, searchQuery, isSearchEnabled, categories, subcategories, showSubcategories, selectedCategory, selectedSubcategory, looks, handleSearchChange]);
 
   return (
     <SafeAreaViewCompat style={styles.container} edges={['top','left','right']}>
@@ -529,32 +649,19 @@ export default function HomeScreen() {
               </View>
             )}
 
-            {/* Botão "Carregar mais" apenas para usuários premium ou quando não está em categoria específica */}
-            {(!isFreeUser || !selectedCategory || selectedCategory === 'todos') && (
+            {/* Botão discreto para carregar mais looks */}
+            {hasMore && !loading && (
               <TouchableOpacity 
-                style={styles.seeMoreButton} 
-                onPress={() => {
-                  if (freeReloadsLeft <= 0) return;
-                  setLooks(prev => [...prev].sort(() => Math.random() - 0.5));
-                  setFreeReloadsLeft(prev => prev - 1);
-                }}
-                disabled={freeReloadsLeft <= 0}
+                style={styles.loadMoreButton} 
+                onPress={handleLoadMore}
               >
-                <LinearGradient
-                  colors={['#1a1a1a', '#333333']}
-                  style={styles.seeMoreGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  <Text style={styles.seeMoreText}>
-                    {freeReloadsLeft === Number.MAX_SAFE_INTEGER
-                      ? t('tabs.home.loadMore.button')
-                      : t('tabs.home.loadMore.remaining').replace('{count}', String(Math.max(freeReloadsLeft, 0)))}
-                  </Text>
-                  <Ionicons name="arrow-down" size={16} color="#FFFFFF" />
-                </LinearGradient>
+                <Text style={styles.loadMoreText}>
+                  {t('tabs.home.loadMore.button')}
+                </Text>
+                <Ionicons name="chevron-down" size={16} color="#999999" />
               </TouchableOpacity>
             )}
+
           </>
         }
         refreshControl={
@@ -654,7 +761,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#1a1a1a',
     letterSpacing: 1.5,
   },
@@ -687,6 +794,14 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#1a1a1a',
+  },
+  searchButton: {
+    backgroundColor: '#1a1a1a',
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   filterButton: {
     backgroundColor: '#1a1a1a',
@@ -835,23 +950,23 @@ const styles = StyleSheet.create({
     color: '#666666',
     fontSize: 14,
   },
-  seeMoreButton: {
+  loadMoreButton: {
     alignSelf: 'center',
     marginVertical: 24,
-    borderRadius: 28,
-    overflow: 'hidden',
-  },
-  seeMoreGradient: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
     gap: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
   },
-  seeMoreText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 16,
+  loadMoreText: {
+    color: '#999999',
+    fontWeight: '500',
+    fontSize: 14,
   },
   categoriesGallery: {
     marginVertical: 32,

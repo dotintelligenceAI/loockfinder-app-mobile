@@ -73,7 +73,11 @@
       "passwordMismatch": "Senhas não coincidem",
       "passwordMinLength": "Senha deve ter pelo menos 6 caracteres",
       "signupError": "Erro ao criar conta",
-      "signupSuccess": "Conta criada com sucesso"
+      "signupSuccess": "Conta criada com sucesso",
+      "termsText": "Ao entrar você concorda com os",
+      "termsAndConditions": "Termos e Condições",
+      "andThe": "e a",
+      "privacyPolicy": "Política de Privacidade"
     }
   },
   "tabs": {
@@ -222,7 +226,9 @@
       "storeNameDefault": "Loja",
       "validUntil": "Válido até",
       "useButtonText": "Usar Cupom",
-      "usedBadgeText": "Usado"
+      "usedBadgeText": "Usado",
+      "featureName": "Cupons de Desconto",
+      "featureDescription": "Acesse cupons exclusivos com descontos de até 70% em suas lojas favoritas."
     },
     "links": {
       "title": "Links",
@@ -276,7 +282,9 @@
       "paywall": {
         "message": "Links de compras são exclusivos para assinantes.",
         "cta": "Fazer Upgrade"
-      }
+      },
+      "featureName": "Links de Compra",
+      "featureDescription": "Acesse milhares de links de compra com preços exclusivos e ofertas especiais."
     },
     "perfil": {
       "title": "Perfil",
@@ -328,6 +336,42 @@
         "free": "Finder Free",
         "expires": "Expira em",
         "change": "Upgrade / Alterar Plano"
+      },
+      "plans": {
+        "title": "Escolha seu plano",
+        "currentPlan": "Plano atual",
+        "detectingLocation": "Detectando sua localização...",
+        "popular": "Popular",
+        "currentBadge": "Plano Atual",
+        "activePlan": "Plano Ativo",
+        "free": "Grátis",
+        "continueFree": "Continuar Grátis",
+        "subscribeNow": "Assinar Agora",
+        "skipForNow": "Pular por enquanto",
+        "planDetails": "Ver descrição do plano",
+        "modalTitle": "Detalhes do plano",
+        "description": "Descrição",
+        "featuresIncluded": "Recursos inclusos",
+        "planLimits": "Limites do plano",
+        "dailyChatMessages": "Mensagens diárias no chat",
+        "maxFavorites": "Favoritos máximos",
+        "shoppingLinksAccess": "Acesso a links de compra",
+        "premiumLooks": "Looks premium",
+        "initialLooksHome": "Looks iniciais na Home",
+        "dailyLookReloads": "Recarregamentos diários de looks",
+        "yes": "Sim",
+        "no": "Não",
+        "close": "Fechar",
+        "updatingPlan": "Atualizando plano...",
+        "preparingCheckout": "Preparando checkout...",
+        "cancelPlan": "Cancelar plano",
+        "cancelPlanTitle": "Cancelar Assinatura",
+        "cancelPlanMessage": "Tem certeza que deseja cancelar sua assinatura? Você perderá acesso aos recursos premium e voltará para o plano gratuito.",
+        "cancelPlanConfirm": "Sim, cancelar",
+        "cancelPlanCancel": "Manter",
+        "cancelingPlan": "Cancelando plano...",
+        "planCanceled": "Plano cancelado com sucesso!",
+        "cancelError": "Erro ao cancelar plano"
       },
       "logout": {
         "title": "Sair da conta",

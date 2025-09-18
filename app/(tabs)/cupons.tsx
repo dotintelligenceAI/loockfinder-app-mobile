@@ -32,8 +32,8 @@ export default function CuponsScreen() {
   
   // Hook para controle de acesso à feature
   const featureAccess = useFeatureAccess(
-    'Cupons de Desconto',
-    'Acesse cupons exclusivos com descontos de até 70% em suas lojas favoritas.',
+    t('tabs.cupons.featureName'),
+    t('tabs.cupons.featureDescription'),
     'pricetag'
   );
   const [refreshing, setRefreshing] = useState(false);
@@ -298,7 +298,7 @@ export default function CuponsScreen() {
 
     // Formatar desconto
     const formatDiscount = (discount: number) => {
-      return `${discount}% ${t('tabs.cupons.discount')}`;
+      return `${discount} ${t('tabs.cupons.discount')}`;
     };
 
     // Status visual: considerar cupom expirado como "apagado"
@@ -473,7 +473,7 @@ export default function CuponsScreen() {
         />
       ) : (
         <FeatureAccessNotice
-          featureName="Cupons de Desconto"
+          featureName={t('tabs.cupons.featureName')}
           onUpgrade={featureAccess.handleUpgrade}
           onGoHome={featureAccess.handleGoHome}
         />
@@ -483,8 +483,8 @@ export default function CuponsScreen() {
       <UpgradeModal
         visible={featureAccess.isUpgradeModalVisible}
         onClose={featureAccess.hideUpgradeModal}
-        featureName="Cupons de Desconto"
-        featureDescription="Acesse cupons exclusivos com descontos de até 70% em suas lojas favoritas."
+        featureName={t('tabs.cupons.featureName')}
+        featureDescription={t('tabs.cupons.featureDescription')}
         iconName="pricetag"
       />
     </SafeAreaView>

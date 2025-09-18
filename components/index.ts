@@ -10,6 +10,7 @@ export { GlobalPreloader } from './GlobalPreloader';
 export { Input } from './Input';
 export { LanguageSelector } from './LanguageSelector';
 export { Logo } from './Logo';
+export { NotificationTester } from './NotificationTester';
 export { PlanLockNotice } from './PlanLockNotice';
 export { Preloader } from './Preloader';
 export { ProtectedRoute } from './ProtectedRoute';

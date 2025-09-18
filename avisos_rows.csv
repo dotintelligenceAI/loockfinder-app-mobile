@@ -1,0 +1,3 @@
+id,user_id,aviso_tipo,titulo,descricao,ativo,mostrado_em,criado_em,atualizado_em
+1e731995-3c82-4e64-8f41-fcfa9dfbcdde,cc8d0fc6-6c49-4448-b1f0-8b65a7c67350,welcome_tour,Bem-vindo à LookFinder!,Descubra todas as funcionalidades da nossa plataforma de moda.,false,2025-05-24 12:20:09.175+00,2025-05-24 10:19:00.921454+00,2025-05-24 12:20:09.70627+00
+9ce7be09-e3f3-417a-974a-58af8ca72a89,16d78191-85fd-4a16-bc59-17e7187b9e0c,welcome_tour,Bem-vindo à LookFinder!,Descubra todas as funcionalidades da nossa plataforma de moda.,true,,2025-05-24 12:46:34.523805+00,2025-05-24 12:46:34.523805+00

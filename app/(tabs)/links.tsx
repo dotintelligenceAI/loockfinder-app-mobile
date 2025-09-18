@@ -9,6 +9,7 @@ import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useState } from 'react';
 import {
   FlatList,
+  Image,
   Linking,
   RefreshControl,
   SafeAreaView,
@@ -33,8 +34,8 @@ export default function LinksScreen() {
   
   // Hook para controle de acesso à feature
   const featureAccess = useFeatureAccess(
-    'Links de Compra',
-    'Acesse milhares de links de compra com preços exclusivos e ofertas especiais.',
+    t('tabs.links.featureName'),
+    t('tabs.links.featureDescription'),
     'link'
   );
   const [refreshing, setRefreshing] = useState(false);
@@ -109,7 +110,63 @@ export default function LinksScreen() {
     }));
   };
 
-  const enrichWithPreviewImages = async (items: LinkItem[]): Promise<LinkItem[]> => items;
+  const enrichWithPreviewImages = async (items: LinkItem[]): Promise<LinkItem[]> => {
+    // Para cada item, tentar extrair preview da URL ou usar fallback
+    return Promise.all(items.map(async item => {
+      if (item.image) {
+        // Se já tem imagem, usar ela
+        return item;
+      }
+      
+      // Tentar extrair imagem real do link
+      const extractedImage = await extractImageFromUrl(item.url);
+      
+      return {
+        ...item,
+        image: extractedImage || generateFallbackImage(item.url, item.title)
+      };
+    }));
+  };
+
+  const extractImageFromUrl = async (url?: string | null): Promise<string | null> => {
+    if (!url) return null;
+    
+    try {
+      // Para alguns domínios conhecidos, podemos tentar extrair a imagem diretamente
+      const hostname = getHostname(url);
+      
+      // Amazon - tentar extrair ASIN
+      if (hostname.includes('amazon.com')) {
+        const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/);
+        if (asinMatch) {
+          const asin = asinMatch[1];
+          return `https://images-na.ssl-images-amazon.com/images/P/${asin}.01.L.jpg`;
+        }
+      }
+      
+      // Mercado Livre - tentar extrair ID do produto
+      if (hostname.includes('mercadolivre.com.br') || hostname.includes('mercadolibre.com')) {
+        const mlbMatch = url.match(/MLB-?(\d+)/i);
+        if (mlbMatch) {
+          // Não temos acesso direto às imagens do ML, usar placeholder
+          return null;
+        }
+      }
+      
+      // Para outros sites, tentar usar meta tags (simulado)
+      // Em uma implementação real, você faria uma requisição HTTP para extrair meta tags
+      return null;
+      
+    } catch (error) {
+      console.log('Erro ao extrair imagem:', error);
+      return null;
+    }
+  };
+
+  const generateFallbackImage = (url?: string | null, title?: string | null): string => {
+    // Usar ícone do app como fallback para todos os casos
+    return 'fallback';
+  };
 
   const formatCurrency = (value: number, currency: string) => {
     // Usar o serviço de geolocalização para formatação adequada
@@ -150,67 +207,59 @@ export default function LinksScreen() {
 
   const renderLinkItem = ({ item }: { item: LinkItem }) => (
     <TouchableOpacity
-      style={styles.linkCard}
+      style={styles.linkItem}
       onPress={() => handleLinkPress(item)}
-      activeOpacity={0.9}
+      activeOpacity={0.8}
     >
-      {/* Conteúdo (sem imagem) */}
-      <View style={styles.linkContent}>
-        {/* Cabeçalho: título + domínio e badges */}
-        <View style={styles.headerRowTextOnly}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.titleTextOnly} numberOfLines={2}>
-              {item.title || getHostname(item.url)}
-            </Text>
-            <Text style={styles.domainTextOnly}>{getHostname(item.url)}</Text>
-          </View>
-          <View style={styles.badgesRight}>
-            {item.discountLabel && (
-              <View style={styles.discountBadge}>
-                <Text style={styles.discountText}>{item.discountLabel}</Text>
-              </View>
-            )}
-            {item.is_url_valid === false && (
-              <View style={styles.invalidBadgeInline}>
-                <Ionicons name="warning" size={12} color="#fff" />
-                <Text style={styles.invalidBadgeText}>{t('tabs.links.invalidLink')}</Text>
-              </View>
-            )}
-          </View>
-        </View>
+      {/* Imagem do produto */}
+      {item.image && item.image !== 'fallback' ? (
+        <Image 
+          source={{ uri: item.image }} 
+          style={styles.linkImage}
+          resizeMode="cover"
+        />
+      ) : (
+        <Image 
+          source={require('@/assets/images/icon-app.png')} 
+          style={styles.linkImage}
+          resizeMode="contain"
+        />
+      )}
 
-        {/* Preço atual e original */}
-        <View style={styles.priceContainer}>
-          <Text style={styles.currentPrice}>{item.priceLabel}</Text>
-          {item.originalPriceLabel && (
-            <Text style={styles.originalPrice}>{item.originalPriceLabel}</Text>
-          )}
-        </View>
+      {/* Gradiente overlay */}
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.6)']}
+        style={styles.linkGradient}
+      />
 
-        {/* Descrição */}
-        {!!item.description && (
-          <Text style={styles.linkDescription} numberOfLines={2}>
-            {item.description}
-          </Text>
+      {/* Badges no topo */}
+      <View style={styles.linkBadges}>
+        {item.discountLabel && (
+          <View style={styles.discountBadge}>
+            <Text style={styles.discountText}>{item.discountLabel}</Text>
+          </View>
         )}
+        {item.is_url_valid === false && (
+          <View style={styles.invalidBadge}>
+            <Ionicons name="warning" size={10} color="#fff" />
+          </View>
+        )}
+      </View>
 
-        {/* Rodapé: loja, clicks e botão */}
-        <View style={styles.footerRow}>
-          <View style={styles.footerLeft}>
-            {!!item.store && <Text style={styles.storeName}>{item.store}</Text>}
-            {typeof item.click_count === 'number' && (
-              <View style={styles.clicksBadge}>
-                <Ionicons name="eye-outline" size={14} color="#666" />
-                <Text style={styles.clicksText}>{item.click_count}</Text>
-            </View>
-          )}
-        </View>
-        
-          <TouchableOpacity style={styles.buyButton} onPress={() => handleLinkPress(item)}>
-            <Text style={styles.buyButtonText}>{t('tabs.links.buy')}</Text>
-            <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+      {/* Informações na parte inferior */}
+      <View style={styles.linkInfo}>
+        <Text style={styles.linkTitle} numberOfLines={2}>
+          {item.title || getHostname(item.url)}
+        </Text>
+        {item.priceLabel && (
+          <View style={styles.linkPriceContainer}>
+            <Text style={styles.linkPrice}>{item.priceLabel}</Text>
+            {item.originalPriceLabel && (
+              <Text style={styles.linkOriginalPrice}>{item.originalPriceLabel}</Text>
+            )}
+          </View>
+        )}
+        <Text style={styles.linkDomain}>{getHostname(item.url)}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -271,6 +320,8 @@ export default function LinksScreen() {
           data={links}
           keyExtractor={(item) => item.id}
           renderItem={renderLinkItem}
+          numColumns={2}
+          columnWrapperStyle={styles.linksGrid}
           contentContainerStyle={styles.linksList}
           refreshControl={
             <RefreshControl
@@ -284,7 +335,7 @@ export default function LinksScreen() {
         />
       ) : (
         <FeatureAccessNotice
-          featureName="Links de Compra"
+          featureName={t('tabs.links.featureName')}
           onUpgrade={featureAccess.handleUpgrade}
           onGoHome={featureAccess.handleGoHome}
         />
@@ -294,8 +345,8 @@ export default function LinksScreen() {
       <UpgradeModal
         visible={featureAccess.isUpgradeModalVisible}
         onClose={featureAccess.hideUpgradeModal}
-        featureName="Links de Compra"
-        featureDescription="Acesse milhares de links de compra com preços exclusivos e ofertas especiais."
+        featureName={t('tabs.links.featureName')}
+        featureDescription={t('tabs.links.featureDescription')}
         iconName="link"
       />
     </SafeAreaView>
@@ -354,20 +405,79 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   linksList: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingBottom: 100,
   },
-  linkCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+  linksGrid: {
+    justifyContent: 'space-between',
     marginBottom: 16,
+  },
+  linkItem: {
+    width: '48%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#F8F9FA',
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    overflow: 'hidden',
+    shadowRadius: 4,
+    position: 'relative',
   },
+  linkImage: {
+    width: '100%',
+    height: 180,
+    backgroundColor: '#F3F4F6',
+  },
+  linkGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+  },
+  linkBadges: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    flexDirection: 'row',
+    gap: 4,
+  },
+  linkInfo: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 12,
+  },
+  linkTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  linkPriceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  linkPrice: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginRight: 6,
+  },
+  linkOriginalPrice: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    textDecorationLine: 'line-through',
+  },
+  linkDomain: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  // Manter estilos antigos para compatibilidade
   linkContent: {
     padding: 16,
   },
@@ -376,10 +486,10 @@ const styles = StyleSheet.create({
   domainTextOnly: { color: '#666', fontSize: 12, marginTop: 2 },
   domainText: { color: '#E5E7EB', fontSize: 12, marginTop: 2 },
   linkDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666666',
-    lineHeight: 20,
-    marginBottom: 12,
+    lineHeight: 18,
+    marginBottom: 8,
   },
   badgesRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   invalidBadgeInline: {
@@ -395,10 +505,10 @@ const styles = StyleSheet.create({
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   currentPrice: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#1a1a1a',
     marginRight: 8,
@@ -410,15 +520,20 @@ const styles = StyleSheet.create({
   },
   discountBadge: {
     backgroundColor: '#FF6B6B',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginLeft: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   discountText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  invalidBadge: {
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   footerRow: {
     flexDirection: 'row',

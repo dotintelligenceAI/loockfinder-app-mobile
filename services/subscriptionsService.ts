@@ -1,3 +1,4 @@
+import { avisosService } from './avisosService';
 import { geolocationService, Region } from './geolocationService';
 import { supabase } from './supabase';
 
@@ -207,6 +208,135 @@ class SubscriptionsService {
       return { success: false, error: (error as any)?.message || 'Erro ao preparar checkout' };
     } catch (e) {
       return { success: false, error: 'Erro ao preparar checkout' };
+    }
+  }
+
+  /**
+   * Cancela a assinatura do usuário e volta para o plano gratuito
+   */
+  async cancelSubscription(userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('🚫 Cancelando assinatura do usuário:', userId);
+      
+      // Buscar plano gratuito da região do usuário
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (!profile) {
+        return { success: false, error: 'Perfil do usuário não encontrado' };
+      }
+
+      // Detectar região para buscar o plano gratuito correto
+      const location = await geolocationService.detectLocation();
+      
+      const { data: freePlans, error: freePlanError } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('slug', 'free')
+        .eq('region', location.region)
+        .eq('is_active', true)
+        .limit(1);
+
+      if (freePlanError || !freePlans || freePlans.length === 0) {
+        console.error('❌ Erro ao buscar plano gratuito:', freePlanError);
+        return { success: false, error: 'Plano gratuito não encontrado' };
+      }
+
+      const freePlan = freePlans[0];
+
+      // Atualizar perfil do usuário para plano gratuito
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          subscription_status: 'free',
+          current_plan_id: freePlan.id,
+          subscription_expires_at: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar perfil:', updateError);
+        return { success: false, error: 'Erro ao cancelar assinatura' };
+      }
+
+      console.log('✅ Assinatura cancelada com sucesso. Usuário voltou para plano gratuito.');
+      
+      // Chamar Edge Function para cancelar no Stripe (se houver subscription_id)
+      if (profile.stripe_subscription_id) {
+        try {
+          const { data: cancelResult, error: cancelError } = await supabase.functions.invoke('cancel-subscription', {
+            body: { 
+              user_id: userId,
+              subscription_id: profile.stripe_subscription_id 
+            }
+          });
+          
+          if (cancelError) {
+            console.warn('⚠️ Erro ao cancelar no Stripe, mas perfil foi atualizado:', cancelError);
+          } else {
+            console.log('✅ Assinatura cancelada no Stripe também');
+          }
+        } catch (stripeError) {
+          console.warn('⚠️ Falha na comunicação com Stripe, mas perfil foi atualizado:', stripeError);
+        }
+      }
+
+      // Criar notificação de cancelamento
+      try {
+        await avisosService.createAviso({
+          user_id: userId,
+          aviso_tipo: 'update',
+          titulo: 'Assinatura cancelada 😔',
+          descricao: 'Sua assinatura foi cancelada. Você ainda pode fazer upgrade a qualquer momento para acessar recursos premium!',
+          ativo: true
+        });
+      } catch (notifError) {
+        console.warn('Erro ao criar notificação de cancelamento:', notifError);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erro ao cancelar assinatura:', error);
+      return { success: false, error: 'Erro interno ao cancelar assinatura' };
+    }
+  }
+
+  /**
+   * Verifica se o usuário tem um plano pago (não gratuito)
+   */
+  async hasPaidPlan(userId: string): Promise<boolean> {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status, current_plan_id')
+        .eq('id', userId)
+        .single();
+
+      if (!profile) return false;
+
+      // Se não tem plano atual ou status é free, não é pago
+      if (!profile.current_plan_id || profile.subscription_status === 'free') {
+        return false;
+      }
+
+      // Verificar se o plano atual não é gratuito
+      const { data: plan } = await supabase
+        .from('subscription_plans')
+        .select('slug, price_cents')
+        .eq('id', profile.current_plan_id)
+        .single();
+
+      if (!plan) return false;
+
+      // Plano é pago se não é 'free' e tem preço > 0
+      return plan.slug !== 'free' && plan.price_cents > 0;
+    } catch (error) {
+      console.error('❌ Erro ao verificar plano pago:', error);
+      return false;
     }
   }
 }

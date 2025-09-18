@@ -222,7 +222,9 @@
       "storeNameDefault": "Store",
       "validUntil": "Valid until",
       "useButtonText": "Use Coupon",
-      "usedBadgeText": "Used"
+      "usedBadgeText": "Used",
+      "featureName": "Discount Coupons",
+      "featureDescription": "Access exclusive coupons with discounts up to 70% at your favorite stores."
     },
     "links": {
       "title": "Links",
@@ -245,7 +247,9 @@
       "paywall": {
         "message": "Shopping links are exclusive to subscribers.",
         "cta": "Upgrade now"
-      }
+      },
+      "featureName": "Shopping Links",
+      "featureDescription": "Access thousands of shopping links with exclusive prices and special offers."
     },
     "perfil": {
       "title": "Profile",
@@ -297,6 +301,42 @@
         "free": "Finder Free",
         "expires": "Expires on",
         "change": "Upgrade / Change Plan"
+      },
+      "plans": {
+        "title": "Choose your plan",
+        "currentPlan": "Current plan",
+        "detectingLocation": "Detecting your location...",
+        "popular": "Popular",
+        "currentBadge": "Current Plan",
+        "activePlan": "Active Plan",
+        "free": "Free",
+        "continueFree": "Continue Free",
+        "subscribeNow": "Subscribe Now",
+        "skipForNow": "Skip for now",
+        "planDetails": "View plan description",
+        "modalTitle": "Plan details",
+        "description": "Description",
+        "featuresIncluded": "Features included",
+        "planLimits": "Plan limits",
+        "dailyChatMessages": "Daily chat messages",
+        "maxFavorites": "Maximum favorites",
+        "shoppingLinksAccess": "Shopping links access",
+        "premiumLooks": "Premium looks",
+        "initialLooksHome": "Initial looks on Home",
+        "dailyLookReloads": "Daily look reloads",
+        "yes": "Yes",
+        "no": "No",
+        "close": "Close",
+        "updatingPlan": "Updating plan...",
+        "preparingCheckout": "Preparing checkout...",
+        "cancelPlan": "Cancel plan",
+        "cancelPlanTitle": "Cancel Subscription",
+        "cancelPlanMessage": "Are you sure you want to cancel your subscription? You will lose access to premium features and return to the free plan.",
+        "cancelPlanConfirm": "Yes, cancel",
+        "cancelPlanCancel": "Keep",
+        "cancelingPlan": "Canceling plan...",
+        "planCanceled": "Plan canceled successfully!",
+        "cancelError": "Error canceling plan"
       },
       "logout": {
         "title": "Sign out",
