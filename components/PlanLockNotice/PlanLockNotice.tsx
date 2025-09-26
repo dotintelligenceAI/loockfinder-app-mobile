@@ -1,10 +1,10 @@
 import { useI18n } from '@/contexts/I18nContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
 import React from 'react';
 import {
   Dimensions,
+  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -31,7 +31,13 @@ export default function PlanLockNotice({
   
   const handlePress = () => {
     if (onUpgrade) onUpgrade();
-    else router.push('/auth/plans' as any);
+    else {
+      // Redirecionar para o site externo para upgrade
+      const websiteUrl = 'https://lookfinder.app/upgrade';
+      Linking.openURL(websiteUrl).catch(() => {
+        console.error('Erro ao abrir URL de upgrade');
+      });
+    }
   };
 
   const getContainerStyle = () => {

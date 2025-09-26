@@ -1,8 +1,10 @@
+import DeactivationModal from '@/components/DeactivationModal';
 import { Toast } from '@/components/Toast/Toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/hooks/useToast';
-import { favoritesService, profilesService, subscriptionsService, supabase } from '@/services';
+import { accountDeactivationService, favoritesService, profilesService, subscriptionsService } from '@/services';
+import s3UploadService from '@/services/s3UploadService';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
@@ -15,6 +17,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Linking,
   Modal,
   PanResponder,
   SafeAreaView,
@@ -34,6 +37,8 @@ export default function PerfilScreen() {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState(t('tabs.perfil.tabs.favorites'));
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [deactivationModalVisible, setDeactivationModalVisible] = useState(false);
+  const [deactivationLoading, setDeactivationLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [favorites, setFavorites] = useState<any[]>([]);
   const [favoritesCount, setFavoritesCount] = useState(0);
@@ -51,6 +56,7 @@ export default function PerfilScreen() {
   const [uploading, setUploading] = useState(false);
   const toastHook = useToast();
   const { toast, showSuccess, showError } = toastHook;
+
 
   // Bottom Sheet Animation
   const [bottomSheetY] = useState(new Animated.Value(screenHeight));
@@ -180,6 +186,54 @@ export default function PerfilScreen() {
     }
   };
 
+  const handleDeactivateAccount = () => {
+    setDeactivationModalVisible(true);
+  };
+
+  const handleConfirmDeactivation = async (data: { reason?: string; feedback?: string }) => {
+    if (!user?.id) {
+      showError('Erro: usuário não encontrado');
+      return;
+    }
+
+    setDeactivationLoading(true);
+    
+    try {
+      // Verificar se pode desativar
+      const canDeactivate = await accountDeactivationService.canDeactivateAccount(user.id);
+      
+      if (!canDeactivate.canDeactivate) {
+        showError(canDeactivate.reason || 'Não é possível desativar a conta no momento');
+        setDeactivationModalVisible(false);
+        return;
+      }
+
+      // Desativar conta
+      const result = await accountDeactivationService.deactivateAccount({
+        userId: user.id,
+        reason: data.reason,
+        feedback: data.feedback,
+      });
+
+      if (result.success) {
+        showSuccess(result.message || 'Conta desativada com sucesso');
+        setDeactivationModalVisible(false);
+        
+        // Fazer logout após desativação
+        setTimeout(() => {
+          signOut();
+        }, 2000);
+      } else {
+        showError(result.error || 'Erro ao desativar conta');
+      }
+    } catch (error) {
+      console.error('Erro na desativação:', error);
+      showError('Erro inesperado ao desativar conta');
+    } finally {
+      setDeactivationLoading(false);
+    }
+  };
+
   const renderFavoriteLook = ({ item }: { item: any }) => {
     return (
       <Animatable.View 
@@ -235,8 +289,8 @@ export default function PerfilScreen() {
           t('tabs.perfil.permissionRequired'), 
           t('tabs.perfil.permissionMessage'),
           [
-            { text: 'Cancelar', style: 'cancel' },
-            { text: 'Abrir Configurações', onPress: () => {
+            { text: t('common.cancel'), style: 'cancel' },
+            { text: t('tabs.perfil.openSettings'), onPress: () => {
               // Tentar abrir as configurações do app
               console.log('⚙️ Redirecionando para configurações...');
             }}
@@ -269,7 +323,7 @@ export default function PerfilScreen() {
         });
         
         setEditAvatar(selectedAsset.uri);
-        showSuccess('Foto selecionada! Clique em "Salvar Alterações" para aplicar.');
+        showSuccess(t('tabs.perfil.photoSelected'));
       } else {
         console.log('❌ Seleção cancelada pelo usuário');
       }
@@ -280,61 +334,13 @@ export default function PerfilScreen() {
     }
   };
 
-  const checkStorageBucket = async () => {
-    try {
-      // Verificar se o bucket existe listando buckets
-      const { data: buckets, error } = await supabase.storage.listBuckets();
-      
-      if (error) {
-        console.error('❌ Erro ao listar buckets:', error);
-        console.log('📋 Tentando continuar sem verificação de bucket...');
-        return true; // Continuar mesmo com erro na listagem
-      }
-
-      console.log('📋 Buckets disponíveis:', buckets?.map(b => b.name));
-
-      const userUploadsBucket = buckets?.find(bucket => bucket.name === 'user-uploads');
-      
-      if (!userUploadsBucket) {
-        console.error('❌ Bucket "user-uploads" não encontrado');
-        console.log('📋 Buckets encontrados:', buckets?.map(b => ({ name: b.name, public: b.public })));
-        // Tentar continuar mesmo sem encontrar o bucket na lista
-        console.log('🔄 Tentando fazer upload mesmo assim...');
-        return true;
-      }
-
-      console.log('✅ Bucket "user-uploads" encontrado:', userUploadsBucket);
-      return true;
-    } catch (error) {
-      console.error('❌ Erro ao verificar bucket:', error);
-      // Continuar mesmo com erro
-      return true;
-    }
-  };
 
   const uploadAvatar = async (uri: string) => {
     try {
       setUploading(true);
-      console.log('🔄 Iniciando upload do avatar:', uri);
+      console.log('🚀 Iniciando upload do avatar via S3:', uri);
       
-      // Verificar conectividade com Supabase
-      console.log('🔗 Verificando conectividade com Supabase...');
-      try {
-        const { data: testData, error: testError } = await supabase.storage.listBuckets();
-        if (testError) {
-          console.warn('⚠️ Erro ao conectar com Supabase Storage:', testError.message);
-        } else {
-          console.log('✅ Conectado ao Supabase Storage');
-          console.log('📋 Buckets disponíveis:', testData?.map(b => b.name) || []);
-        }
-      } catch (testErr) {
-        console.warn('⚠️ Erro de conectividade:', testErr);
-      }
-
-      // Verificar se o bucket existe (opcional, não bloqueia o upload)
-      await checkStorageBucket();
-      
-      // Verificar se o arquivo existe usando a API legacy (sem warning)
+      // Verificar se o arquivo existe
       const fileInfo = await FileSystem.getInfoAsync(uri);
       console.log('📁 Info do arquivo:', fileInfo);
       
@@ -351,52 +357,24 @@ export default function PerfilScreen() {
       const blob = await response.blob();
       console.log('📦 Blob criado, tamanho:', blob.size);
 
-      // Definir nome e caminho do arquivo
+      // Definir nome do arquivo
       const fileExt = uri.split('.').pop()?.split('?')[0] || 'jpg';
-      const fileName = `${user?.id || 'user'}_avatar_${Date.now()}.${fileExt}`;
-      const filePath = `foto_perfil/${fileName}`;
+      const fileName = `avatar_${Date.now()}.${fileExt}`;
       
-      console.log('📤 Fazendo upload para:', filePath);
-      console.log('🗂️ Bucket de destino: user-uploads');
+      console.log('📤 Fazendo upload S3 para:', fileName);
       console.log('📦 Tamanho do blob:', blob.size, 'bytes');
-      console.log('🏷️ Content-Type:', `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`);
+      console.log('🏷️ Content-Type:', blob.type || `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`);
 
-      // Upload para o Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('user-uploads')
-        .upload(filePath, blob, { 
-          upsert: true,
-          contentType: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`
-        });
+      // Upload via S3 direto
+      const uploadResult = await s3UploadService.uploadAvatar(blob, fileName, user?.id);
 
-      if (error) {
-        console.error('❌ Erro no upload:', error);
-        console.error('📋 Detalhes do erro:', {
-          message: error.message,
-          name: error.name
-        });
-        
-        // Tentar diagnóstico do erro
-        if (error.message?.includes('not found') || error.message?.includes('bucket')) {
-          throw new Error('Bucket de storage não encontrado. Verifique a configuração do Supabase.');
-        } else if (error.message?.includes('permission') || error.message?.includes('unauthorized')) {
-          throw new Error('Sem permissão para fazer upload. Verifique as políticas RLS do Supabase.');
-        } else {
-          throw new Error(`Erro no upload: ${error.message}`);
-        }
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Erro no upload S3');
       }
 
-      console.log('✅ Upload concluído:', data);
-
-      // Obter URL pública
-      const { data: publicUrlData } = supabase.storage
-        .from('user-uploads')
-        .getPublicUrl(filePath);
-
-      const publicUrl = publicUrlData.publicUrl;
-      console.log('🔗 URL pública gerada:', publicUrl);
-
-      return publicUrl;
+      console.log('✅ Upload S3 concluído:', uploadResult.url);
+      return uploadResult.url;
+      
     } catch (error) {
       console.error('❌ Erro no uploadAvatar:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no upload';
@@ -554,10 +532,6 @@ export default function PerfilScreen() {
 
               {/* Botões de ação */}
               <View style={styles.actionButtons}>
-                {/* <TouchableOpacity style={[styles.editProfileButton, { backgroundColor: '#4A4A4A' }]} onPress={() => router.push('/auth/plans' as any)}>
-                  <Ionicons name="pricetags-outline" size={16} color="#FFFFFF" />
-                  <Text style={styles.editProfileText}>{'Upgrade / Alterar Plano'}</Text>
-                </TouchableOpacity> */}
                 <TouchableOpacity style={styles.editProfileButton} onPress={() => setEditModalVisible(true)}>
                   <Ionicons name="pencil" size={16} color="#FFFFFF" />
                   <Text style={styles.editProfileText}>{t('tabs.perfil.editProfile')}</Text>
@@ -568,6 +542,15 @@ export default function PerfilScreen() {
                   <Text style={styles.logoutButtonText}>{t('tabs.perfil.logout.confirm')}</Text>
                 </TouchableOpacity>
               </View>
+
+              {/* Botão de desativar conta */}
+              <TouchableOpacity 
+                style={styles.deactivateAccountButton} 
+                onPress={handleDeactivateAccount}
+              >
+                <Ionicons name="person-remove-outline" size={14} color="#999999" />
+                <Text style={styles.deactivateAccountText}>{t('tabs.perfil.deactivateAccount')}</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Tabs melhoradas */}
@@ -611,7 +594,7 @@ export default function PerfilScreen() {
             <View style={styles.looksGridContainer}>
               {loadingFavorites ? (
                 <View style={styles.loadingContainer}>
-                  <Text style={styles.loadingText}>Carregando favoritos...</Text>
+                  <Text style={styles.loadingText}>{t('tabs.perfil.loadingFavorites')}</Text>
                 </View>
               ) : favorites.length > 0 ? (
                 <FlatList
@@ -625,7 +608,7 @@ export default function PerfilScreen() {
                 />
               ) : (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>Nenhum favorito encontrado</Text>
+                  <Text style={styles.emptyText}>{t('tabs.perfil.noFavorites')}</Text>
                 </View>
               )}
             </View>
@@ -653,7 +636,7 @@ export default function PerfilScreen() {
           >
             <View style={styles.bottomSheetHeader}>
               <View style={styles.bottomSheetHandle} />
-              <Text style={styles.modalTitle}>Editar Perfil</Text>
+              <Text style={styles.modalTitle}>{t('tabs.perfil.editProfile')}</Text>
               <TouchableOpacity 
                 style={styles.closeButton}
                 onPress={() => setEditModalVisible(false)}
@@ -669,12 +652,43 @@ export default function PerfilScreen() {
             {/* Plano atual */}
             <View style={{ marginBottom: 16, marginTop: 16 }}>
               <View style={{ backgroundColor: '#F8F9FA', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#E5E7EB' }}>
-                <Text style={{ color: '#1a1a1a', fontWeight: '700' }}>{planName || t('tabs.perfil.plan.free')}</Text>
-                {/** Datas podem ser adicionadas quando disponível via loadPlan -> subscription_expires_at */}
-                {/* <Text style={{ color: '#666' }}>{t('tabs.perfil.plan.expires')}: {subscriptionExpiresAt ? new Date(subscriptionExpiresAt).toLocaleDateString('pt-BR') : '-'}</Text> */}
-                <TouchableOpacity style={[styles.editProfileButton, { marginTop: 10 }]} onPress={() => router.push('/auth/plans' as any)}>
-                  <Ionicons name="pricetags-outline" size={16} color="#FFFFFF" />
-                  <Text style={styles.editProfileText}>{t('tabs.perfil.plan.change')}</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={{ color: '#1a1a1a', fontWeight: '700' }}>{planName || t('tabs.perfil.plan.free')}</Text>
+                  {planName === 'Finder Free' && (
+                    <TouchableOpacity 
+                      style={{ 
+                        backgroundColor: '#1a1a1a', 
+                        paddingHorizontal: 12, 
+                        paddingVertical: 6, 
+                        borderRadius: 8,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4
+                      }}
+                      onPress={() => router.push('/upgrade')}
+                    >
+                      <Ionicons name="star" size={14} color="#FFFFFF" />
+                      <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
+                        Upgrade
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <Text style={{ color: '#666666', fontSize: 13, marginTop: 6, lineHeight: 18 }}>
+                  {t('premium.overlay.notice')}
+                </Text>
+                <TouchableOpacity 
+                  style={{ marginTop: 8, paddingVertical: 4 }}
+                  onPress={() => {
+                    const url = 'https://www.instagram.com/lookfinder.app?igsh=NHJqNWpzeDhwY2t5';
+                    Linking.openURL(url).catch(() => {
+                      console.error('Erro ao abrir URL');
+                    });
+                  }}
+                >
+                  <Text style={{ color: '#1a1a1a', fontSize: 13, fontWeight: '600', textDecorationLine: 'underline' }}>
+                    {t('premium.overlay.learnMore')}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -705,14 +719,14 @@ export default function PerfilScreen() {
                   </View>
                 </TouchableOpacity>
                 <Text style={styles.avatarHint}>
-                  {uploading ? 'Fazendo upload...' : 'Toque para alterar a foto'}
+                  {uploading ? t('tabs.perfil.uploading') : t('tabs.perfil.changePhotoHint')}
                 </Text>
               </View>
 
               {/* Form Fields */}
               <View style={styles.formSection}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Nome</Text>
+                  <Text style={styles.inputLabel}>{t('tabs.perfil.name')}</Text>
                   <TextInput
                     style={styles.input}
                     value={editFullName}
@@ -723,7 +737,7 @@ export default function PerfilScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Bio</Text>
+                  <Text style={styles.inputLabel}>{t('tabs.perfil.bio')}</Text>
                   <TextInput
                     style={[styles.input, styles.textArea]}
                     value={editBio}
@@ -736,7 +750,7 @@ export default function PerfilScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Telefone</Text>
+                  <Text style={styles.inputLabel}>{t('tabs.perfil.phone')}</Text>
                   <TextInput
                     style={styles.input}
                     value={editPhone}
@@ -748,7 +762,7 @@ export default function PerfilScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Localização</Text>
+                  <Text style={styles.inputLabel}>{t('tabs.perfil.location')}</Text>
                   <TextInput
                     style={styles.input}
                     value={editLocation}
@@ -759,7 +773,7 @@ export default function PerfilScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Instagram</Text>
+                  <Text style={styles.inputLabel}>{t('tabs.perfil.instagram')}</Text>
                   <TextInput
                     style={styles.input}
                     value={editInstagram}
@@ -786,12 +800,12 @@ export default function PerfilScreen() {
                     {uploading ? (
                       <>
                         <Ionicons name="cloud-upload-outline" size={20} color="#FFFFFF" />
-                        <Text style={styles.saveButtonText}>Salvando...</Text>
+                        <Text style={styles.saveButtonText}>{t('tabs.perfil.saving')}</Text>
                       </>
                     ) : (
                       <>
                         <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-                        <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+                        <Text style={styles.saveButtonText}>{t('tabs.perfil.saveChanges')}</Text>
                       </>
                     )}
                   </LinearGradient>
@@ -801,7 +815,7 @@ export default function PerfilScreen() {
                   style={styles.cancelButton} 
                   onPress={() => setEditModalVisible(false)}
                 >
-                  <Text style={styles.cancelButtonText}>Cancelar</Text>
+                  <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -849,13 +863,22 @@ export default function PerfilScreen() {
                   }}
                 >
                   <Ionicons name="heart" size={24} color="#FF6B6B" />
-                  <Text style={styles.modalFavoriteText}>Remover dos favoritos</Text>
+                  <Text style={styles.modalFavoriteText}>{t('tabs.perfil.removeFavorite')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </TouchableOpacity>
         </View>
       </Modal>
+
+      {/* Modal de Desativação de Conta */}
+      <DeactivationModal
+        visible={deactivationModalVisible}
+        onClose={() => setDeactivationModalVisible(false)}
+        onConfirm={handleConfirmDeactivation}
+        loading={deactivationLoading}
+      />
+
     </SafeAreaView>
   );
 }
@@ -1025,6 +1048,21 @@ const styles = StyleSheet.create({
     color: '#666666',
     fontSize: 14,
     fontWeight: '600',
+  },
+  deactivateAccountButton: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginTop: 16,
+    gap: 6,
+  },
+  deactivateAccountText: {
+    color: '#999999',
+    fontSize: 12,
+    fontWeight: '500',
   },
   tabsContainer: {
     flexDirection: 'row',

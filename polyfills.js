@@ -1,4 +1,53 @@
-// Polyfills básicos para React Native
+// Polyfills para React Native
+
+// Polyfill para __fbBatchedBridgeConfig
+if (typeof global.__fbBatchedBridgeConfig === 'undefined') {
+  global.__fbBatchedBridgeConfig = {
+    remoteModuleConfig: [],
+    localModulesConfig: null
+  };
+}
+
+// Polyfill para NativeModules
+if (typeof global.NativeModules === 'undefined') {
+  global.NativeModules = {};
+}
+
+// Polyfill para TurboModuleRegistry
+if (typeof global.TurboModuleRegistry === 'undefined') {
+  global.TurboModuleRegistry = {
+    get: () => null,
+    set: () => {},
+    delete: () => {},
+    getAll: () => ({}),
+    setMultiple: () => {},
+    deleteMultiple: () => {},
+  };
+}
+
+// Polyfill para módulos Node.js
+if (typeof global.process === 'undefined') {
+  global.process = require('process');
+}
+
+// Polyfill para stream
+if (typeof global.stream === 'undefined') {
+  global.stream = {
+    Duplex: class Duplex {
+      constructor() {
+        this.readable = true;
+        this.writable = true;
+      }
+    }
+  };
+}
+
+// Polyfill para util
+if (typeof global.util === 'undefined') {
+  global.util = {
+    inspect: (obj) => JSON.stringify(obj, null, 2)
+  };
+}
 
 // Polyfill simples para btoa/atob usando base64
 if (typeof global.btoa === 'undefined') {

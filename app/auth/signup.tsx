@@ -48,12 +48,12 @@ function SignUpScreenContent() {
           await profilesService.createMinimalProfile(response.user.id, fullName || null, null);
           showSuccess(t('auth.signup.signupSuccess'));
           setTimeout(() => {
-            router.replace('/auth/plans');
+            router.replace('/(tabs)/home');
           }, 800);
         } else {
           showSuccess(response.message || t('auth.signup.signupSuccess'));
           setTimeout(() => {
-            router.replace('/auth/plans');
+            router.replace('/(tabs)/home');
           }, 800);
         }
       } else {

@@ -8,16 +8,16 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Animated,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 type AuthMode = 'signin' | 'register';
@@ -119,12 +119,12 @@ function AuthUnifiedScreenContent() {
           await profilesService.createMinimalProfile(response.user.id, fullName || null, null);
           showSuccess(t('auth.signup.signupSuccess'));
           setTimeout(() => {
-            router.replace('/auth/plans');
+            router.replace('/(tabs)/home');
           }, 800);
         } else {
           showSuccess(response.message || t('auth.signup.signupSuccess'));
           setTimeout(() => {
-            router.replace('/auth/plans');
+            router.replace('/(tabs)/home');
           }, 800);
         }
       } else {

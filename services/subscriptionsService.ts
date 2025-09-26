@@ -1,6 +1,17 @@
+import Constants from 'expo-constants';
 import { avisosService } from './avisosService';
 import { geolocationService, Region } from './geolocationService';
 import { supabase } from './supabase';
+
+// Usar IAP real ou mock baseado no ambiente
+let iapService: any;
+if (Constants.appOwnership === 'expo') {
+  // Expo Go - usar mock
+  iapService = require('./iapServiceMock').iapService;
+} else {
+  // Development Build ou Production - usar IAP real
+  iapService = require('./iapService').iapService;
+}
 
 export type SubscriptionStatus = 'free' | 'active' | 'past_due' | 'canceled';
 
@@ -148,6 +159,9 @@ class SubscriptionsService {
     }
   }
 
+  /**
+   * Prepara checkout usando In-App Purchase (IAP) em vez de redirecionamento externo
+   */
   async prepareCheckout(
     planId: string,
     userId?: string,
@@ -155,60 +169,68 @@ class SubscriptionsService {
     region?: Region
   ): Promise<{ success: boolean; url?: string; error?: string }> {
     try {
-      // Se não foi especificada uma região, detectar automaticamente
-      if (!region) {
-        const location = await geolocationService.detectLocation();
-        region = location.region;
+      console.log('🛍️ Preparando checkout IAP para plano:', planId);
+
+      // Inicializar IAP se necessário
+      const initResult = await iapService.initialize();
+      if (!initResult.success) {
+        return { success: false, error: initResult.error || 'Erro ao inicializar IAP' };
       }
 
-      // Buscar o plano específico da região
-      const { data: plan, error: planError } = await supabase
-        .from('subscription_plans')
-        .select('*')
-        .eq('id', planId)
-        .eq('region', region)
-        .single();
-
-      if (planError || !plan) {
-        return { success: false, error: 'Plano não encontrado para esta região' };
+      // Mapear plano para produto IAP
+      const iapProductId = this.mapPlanToIAPProduct(planId);
+      if (!iapProductId) {
+        return { success: false, error: 'Plano não suportado para IAP' };
       }
 
-      // Usar o stripe_price_id do plano da região específica
-      const finalStripePriceId = stripePriceId || plan.stripe_price_id;
-
-      // Espera existir uma RPC ou Edge Function que retorna checkout_url
-      const params: Record<string, any> = { 
-        plan_id: planId,
-        region: region,
-        stripe_price_id: finalStripePriceId
-      };
-      if (userId) params.user_id = userId;
+      // Verificar se é produto ou assinatura
+      const isSubscription = this.isSubscriptionPlan(planId);
       
-      const { data, error } = await supabase.rpc('prepare_checkout_data', params);
-      if (!error) {
-        return { success: true, url: (data as any)?.checkout_url || (data as any)?.url };
-      }
-      
-      // Fallback: se RPC não existir, tentar Edge Function homônima
-      if ((error as any)?.code === 'PGRST202') {
-        // 1) Tenta prepare_checkout_data
-        const fn1 = await (supabase as any).functions.invoke('prepare_checkout_data', {
-          body: { ...params, stripe_price_id: finalStripePriceId },
-        });
-        if (!fn1.error && fn1.data) {
-          return { success: true, url: (fn1.data as any)?.checkout_url || (fn1.data as any)?.url };
+      if (isSubscription) {
+        // Processar assinatura
+        const result = await iapService.purchaseSubscription(iapProductId);
+        if (result.success) {
+          return { success: true, url: 'iap://subscription_completed' };
+        } else {
+          return { success: false, error: result.error };
         }
-        // 2) Tenta slug alternativo comum (ex.: 'hyper-service')
-        const fn2 = await (supabase as any).functions.invoke('hyper-service', {
-          body: { ...params, stripe_price_id: finalStripePriceId },
-        });
-        if (fn2.error) return { success: false, error: fn2.error.message || 'Erro ao preparar checkout' };
-        return { success: true, url: (fn2.data as any)?.checkout_url || (fn2.data as any)?.url };
+      } else {
+        // Processar produto único
+        const result = await iapService.purchaseProduct(iapProductId);
+        if (result.success) {
+          return { success: true, url: 'iap://product_completed' };
+        } else {
+          return { success: false, error: result.error };
+        }
       }
-      return { success: false, error: (error as any)?.message || 'Erro ao preparar checkout' };
-    } catch (e) {
-      return { success: false, error: 'Erro ao preparar checkout' };
+    } catch (error) {
+      console.error('❌ Erro no checkout IAP:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro no checkout IAP' 
+      };
     }
+  }
+
+  /**
+   * Mapeia plano do sistema para produto IAP
+   */
+  private mapPlanToIAPProduct(planId: string): string | null {
+    const mappings: Record<string, string> = {
+      'lifetime': 'com.lookfinder.premium.lifetime',
+      'monthly': 'com.lookfinder.premium.monthly', 
+      'annual': 'com.lookfinder.premium.annual',
+    };
+
+    return mappings[planId] || null;
+  }
+
+  /**
+   * Verifica se o plano é uma assinatura
+   */
+  private isSubscriptionPlan(planId: string): boolean {
+    const subscriptionPlans = ['monthly', 'annual'];
+    return subscriptionPlans.includes(planId);
   }
 
   /**
@@ -337,6 +359,58 @@ class SubscriptionsService {
     } catch (error) {
       console.error('❌ Erro ao verificar plano pago:', error);
       return false;
+    }
+  }
+
+  /**
+   * Restaura compras IAP do usuário
+   */
+  async restorePurchases(): Promise<{ success: boolean; restoredCount?: number; error?: string }> {
+    try {
+      console.log('🔄 Restaurando compras IAP...');
+      
+      const result = await iapService.restorePurchases();
+      
+      if (result.success) {
+        const restoredCount = result.restoredPurchases?.length || 0;
+        console.log(`✅ ${restoredCount} compras restauradas`);
+        return { success: true, restoredCount };
+      } else {
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('❌ Erro ao restaurar compras:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro ao restaurar compras' 
+      };
+    }
+  }
+
+  /**
+   * Obtém produtos IAP disponíveis
+   */
+  async getIAPProducts(): Promise<{ success: boolean; products?: any[]; subscriptions?: any[]; error?: string }> {
+    try {
+      const initResult = await iapService.initialize();
+      if (!initResult.success) {
+        return { success: false, error: initResult.error };
+      }
+
+      const products = iapService.getAvailableProducts();
+      const subscriptions = iapService.getAvailableSubscriptions();
+
+      return { 
+        success: true, 
+        products, 
+        subscriptions 
+      };
+    } catch (error) {
+      console.error('❌ Erro ao obter produtos IAP:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro ao obter produtos' 
+      };
     }
   }
 }

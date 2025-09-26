@@ -1,5 +1,7 @@
 export { Button } from './Button';
 export { CustomTabBar } from './CustomTabBar';
+export { default as DeactivationModal } from './DeactivationModal';
+export { ErrorBoundary } from './ErrorBoundary';
 export { FeatureAccessNotice } from './FeatureAccessNotice';
 export { FinderLogo } from './FinderLogo';
 export { FloatingChatButton } from './FloatingChatButton';
@@ -13,6 +15,7 @@ export { Logo } from './Logo';
 export { NotificationTester } from './NotificationTester';
 export { PlanLockNotice } from './PlanLockNotice';
 export { Preloader } from './Preloader';
+export { PremiumOverlay } from './PremiumOverlay';
 export { ProtectedRoute } from './ProtectedRoute';
 export { Toast } from './Toast';
 export { UpgradeModal } from './UpgradeModal';

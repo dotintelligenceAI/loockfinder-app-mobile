@@ -11,9 +11,13 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.asaphcruz.lookfinderMobile",
+      "buildNumber": "4",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": ["remote-notification"],
+        "NSPhotoLibraryUsageDescription": "Este app precisa acessar sua biblioteca de fotos para permitir que você selecione e faça upload de imagens para seu perfil.",
+        "NSCameraUsageDescription": "Este app precisa acessar sua câmera para permitir que você tire fotos e faça upload para seu perfil.",
+        "NSPhotoLibraryAddUsageDescription": "Este app precisa salvar imagens na sua biblioteca de fotos quando você fizer upload de fotos de perfil."
       }
     },
     "android": {
@@ -23,12 +27,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "androidStatusBar": {
-        "backgroundColor": "#00000000",
-        "translucent": true,
-        "barStyle": "light-content",
-        "hidden": true
-      }
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA"
+      ]
     },
     "extra": {
       "eas": {

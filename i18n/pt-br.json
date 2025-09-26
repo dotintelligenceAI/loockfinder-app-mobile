@@ -20,7 +20,6 @@
     "language": "Idioma",
     "settings": "Configurações",
     "profile": "Perfil",
-    "logout": "Sair",
     "login": "Entrar",
     "signup": "Cadastrar",
     "welcome": "Bem-vindo"
@@ -92,7 +91,6 @@
       "allCategories": "Todas as categorias",
       "viewAll": "Ver todos",
       "noLooks": "look encontrado",
-      "loadMore": "Carregar mais",
       "searchPlaceholder": "Buscar looks...",
       "filterByCategory": "Filtrar por categoria",
       "sortBy": "Ordenar por",
@@ -108,7 +106,7 @@
         "remaining": "Carregar novos looks ({count} restantes)"
       },
       "upgrade": {
-        "categoryMessage": "Faça upgrade para ver todos os looks desta categoria",
+        "categoryMessage": "Explore looks sem fim com o finder premium, saiba mais",
         "upgradeButton": "Fazer Upgrade"
       }
     },
@@ -292,6 +290,10 @@
       "personalInfo": "Informações pessoais",
       "name": "Nome",
       "email": "E-mail",
+      "bio": "Bio",
+      "phone": "Telefone",
+      "location": "Localização",
+      "instagram": "Instagram",
       "avatar": "Foto de perfil",
       "changeAvatar": "Alterar foto",
       "saveChanges": "Salvar alterações",
@@ -310,7 +312,6 @@
       "confirmNewPassword": "Confirmar nova senha",
       "deleteAccount": "Excluir conta",
       "deleteAccountWarning": "Esta ação não pode ser desfeita",
-      "logout": "Sair",
       "logoutConfirm": "Tem certeza que deseja sair?",
       "profileUpdated": "Perfil atualizado com sucesso",
       "passwordChanged": "Senha alterada com sucesso",
@@ -337,42 +338,6 @@
         "expires": "Expira em",
         "change": "Upgrade / Alterar Plano"
       },
-      "plans": {
-        "title": "Escolha seu plano",
-        "currentPlan": "Plano atual",
-        "detectingLocation": "Detectando sua localização...",
-        "popular": "Popular",
-        "currentBadge": "Plano Atual",
-        "activePlan": "Plano Ativo",
-        "free": "Grátis",
-        "continueFree": "Continuar Grátis",
-        "subscribeNow": "Assinar Agora",
-        "skipForNow": "Pular por enquanto",
-        "planDetails": "Ver descrição do plano",
-        "modalTitle": "Detalhes do plano",
-        "description": "Descrição",
-        "featuresIncluded": "Recursos inclusos",
-        "planLimits": "Limites do plano",
-        "dailyChatMessages": "Mensagens diárias no chat",
-        "maxFavorites": "Favoritos máximos",
-        "shoppingLinksAccess": "Acesso a links de compra",
-        "premiumLooks": "Looks premium",
-        "initialLooksHome": "Looks iniciais na Home",
-        "dailyLookReloads": "Recarregamentos diários de looks",
-        "yes": "Sim",
-        "no": "Não",
-        "close": "Fechar",
-        "updatingPlan": "Atualizando plano...",
-        "preparingCheckout": "Preparando checkout...",
-        "cancelPlan": "Cancelar plano",
-        "cancelPlanTitle": "Cancelar Assinatura",
-        "cancelPlanMessage": "Tem certeza que deseja cancelar sua assinatura? Você perderá acesso aos recursos premium e voltará para o plano gratuito.",
-        "cancelPlanConfirm": "Sim, cancelar",
-        "cancelPlanCancel": "Manter",
-        "cancelingPlan": "Cancelando plano...",
-        "planCanceled": "Plano cancelado com sucesso!",
-        "cancelError": "Erro ao cancelar plano"
-      },
       "logout": {
         "title": "Sair da conta",
         "message": "Tem certeza que deseja sair?",
@@ -387,7 +352,43 @@
       "bioPlaceholder": "Conte um pouco sobre você...",
       "phonePlaceholder": "(00) 00000-0000",
       "locationPlaceholder": "Sua cidade, estado",
-      "instagramPlaceholder": "@seuusuario"
+      "instagramPlaceholder": "@seuusuario",
+      "photoSelected": "Foto selecionada! Clique em \"Salvar Alterações\" para aplicar.",
+      "loadingFavorites": "Carregando favoritos...",
+      "noFavorites": "Nenhum favorito encontrado",
+      "uploading": "Fazendo upload...",
+      "saving": "Salvando...",
+      "changePhotoHint": "Toque para alterar a foto",
+      "removeFavorite": "Remover dos favoritos",
+      "openSettings": "Abrir Configurações",
+      "deactivateAccount": "Desativar sua conta",
+    "deactivationModal": {
+      "title": "Desativar Conta",
+      "warning": "Ao desativar sua conta, você perderá acesso a todos os seus dados e não poderá recuperá-los.",
+      "question": "Por que você está desativando sua conta?",
+      "reasons": {
+        "not_using": "Não estou usando mais o app",
+        "found_alternative": "Encontrei uma alternativa melhor",
+        "privacy_concerns": "Preocupações com privacidade",
+        "too_expensive": "Muito caro",
+        "technical_issues": "Problemas técnicos",
+        "other": "Outro motivo"
+      },
+      "feedback": {
+        "label": "Gostaria de nos contar mais sobre sua experiência? (Opcional)",
+        "placeholder": "Seus comentários nos ajudam a melhorar o app...",
+        "characterCount": "{count}/500 caracteres"
+      },
+      "buttons": {
+        "cancel": "Cancelar",
+        "deactivate": "Desativar Conta",
+        "deactivating": "Desativando..."
+      },
+      "confirmTitle": "Confirmar Desativação",
+      "confirmMessage": "Tem certeza que deseja desativar sua conta? Esta ação não pode ser desfeita.",
+      "confirmCancel": "Cancelar",
+      "confirmDeactivate": "Desativar"
+    }
     }
   },
   "components": {
@@ -449,6 +450,14 @@
     "unknown": "Erro desconhecido",
     "tryAgain": "Tente novamente",
     "checkConnection": "Verifique sua conexão"
+  },
+  "premium": {
+    "overlay": {
+      "title": "Desbloquear Recursos",
+      "subtitle": "Explore {feature} e muito mais com nossa versão completa",
+      "notice": "Seja uma finder sem limites. Siba mais",
+      "learnMore": "Saiba mais"
+    }
   },
   "languages": {
     "pt-br": "Português",

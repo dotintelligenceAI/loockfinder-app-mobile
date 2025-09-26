@@ -26,8 +26,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [notificationListeners, setNotificationListeners] = useState<{
-    receivedSubscription?: Notifications.Subscription;
-    responseSubscription?: Notifications.Subscription;
+    receivedSubscription?: Notifications.Subscription | null;
+    responseSubscription?: Notifications.Subscription | null;
   }>({});
 
   // Verificar conexão com Supabase
@@ -54,21 +54,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Configurar notificações para o usuário
   const setupNotifications = useCallback(async (userId: string) => {
     try {
-      // Registrar para push notifications
-      const token = await notificationsService.registerForPushNotifications();
+      // console.log('🔔 Setting up notifications for user:', userId);
+      
+      // Registrar para push notifications com timeout
+      const tokenPromise = notificationsService.registerForPushNotifications();
+      const timeoutPromise = new Promise<null>((resolve) => 
+        setTimeout(() => resolve(null), 5000) // 5 segundos timeout
+      );
+      
+      const token = await Promise.race([tokenPromise, timeoutPromise]);
+      
       if (token) {
         setExpoPushToken(token);
-        await notificationsService.saveDeviceToken(userId, token);
+        try {
+          await notificationsService.saveDeviceToken(userId, token);
+          console.log('✅ Device token saved successfully');
+        } catch (tokenError) {
+          console.error('❌ Failed to save device token:', tokenError);
+          // Não falhar por causa de token
+        }
+      } else {
+        console.log('⚠️ No push token obtained (timeout or unavailable)');
       }
 
-      // Configurar listeners
-      const listeners = notificationsService.setupNotificationListeners();
-      setNotificationListeners(listeners);
+      // Configurar listeners com proteção
+      try {
+        const listeners = notificationsService.setupNotificationListeners();
+        setNotificationListeners(listeners);
+        console.log('✅ Notification listeners configured');
+      } catch (listenerError) {
+        console.error('❌ Failed to setup notification listeners:', listenerError);
+        // Não falhar por causa de listeners
+      }
 
-      // Processar notificações pendentes
-      await notificationsService.processNotifications(userId);
+      // Processar notificações pendentes com timeout
+      try {
+        const processPromise = notificationsService.processNotifications(userId);
+        const processTimeoutPromise = new Promise<void>((resolve) => 
+          setTimeout(() => resolve(), 3000) // 3 segundos timeout
+        );
+        
+        await Promise.race([processPromise, processTimeoutPromise]);
+        console.log('✅ Notifications processed');
+      } catch (processError) {
+        console.error('❌ Failed to process notifications:', processError);
+        // Não falhar por causa de processamento
+      }
     } catch (error) {
-      console.error('Erro ao configurar notificações:', error);
+      console.error('❌ Error setting up notifications:', error);
+      // Não falhar a inicialização do app por causa de notificações
     }
   }, []);
 

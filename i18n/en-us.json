@@ -73,7 +73,11 @@
       "passwordMismatch": "Passwords don't match",
       "passwordMinLength": "Password must be at least 6 characters",
       "signupError": "Error creating account",
-      "signupSuccess": "Account created successfully"
+      "signupSuccess": "Account created successfully",
+      "termsText": "By signing up you agree to the",
+      "termsAndConditions": "Terms and Conditions",
+      "andThe": "and the",
+      "privacyPolicy": "Privacy Policy"
     }
   },
   "tabs": {
@@ -104,7 +108,7 @@
         "remaining": "Load new looks ({count} left)"
       },
       "upgrade": {
-        "categoryMessage": "Upgrade to see all looks in this category",
+        "categoryMessage": "Explore endless looks with finder premium, learn more",
         "upgradeButton": "Upgrade Now"
       }
     },
@@ -257,6 +261,10 @@
       "personalInfo": "Personal information",
       "name": "Name",
       "email": "Email",
+      "bio": "Bio",
+      "phone": "Phone",
+      "location": "Location",
+      "instagram": "Instagram",
       "avatar": "Profile picture",
       "changeAvatar": "Change picture",
       "saveChanges": "Save changes",
@@ -302,42 +310,6 @@
         "expires": "Expires on",
         "change": "Upgrade / Change Plan"
       },
-      "plans": {
-        "title": "Choose your plan",
-        "currentPlan": "Current plan",
-        "detectingLocation": "Detecting your location...",
-        "popular": "Popular",
-        "currentBadge": "Current Plan",
-        "activePlan": "Active Plan",
-        "free": "Free",
-        "continueFree": "Continue Free",
-        "subscribeNow": "Subscribe Now",
-        "skipForNow": "Skip for now",
-        "planDetails": "View plan description",
-        "modalTitle": "Plan details",
-        "description": "Description",
-        "featuresIncluded": "Features included",
-        "planLimits": "Plan limits",
-        "dailyChatMessages": "Daily chat messages",
-        "maxFavorites": "Maximum favorites",
-        "shoppingLinksAccess": "Shopping links access",
-        "premiumLooks": "Premium looks",
-        "initialLooksHome": "Initial looks on Home",
-        "dailyLookReloads": "Daily look reloads",
-        "yes": "Yes",
-        "no": "No",
-        "close": "Close",
-        "updatingPlan": "Updating plan...",
-        "preparingCheckout": "Preparing checkout...",
-        "cancelPlan": "Cancel plan",
-        "cancelPlanTitle": "Cancel Subscription",
-        "cancelPlanMessage": "Are you sure you want to cancel your subscription? You will lose access to premium features and return to the free plan.",
-        "cancelPlanConfirm": "Yes, cancel",
-        "cancelPlanCancel": "Keep",
-        "cancelingPlan": "Canceling plan...",
-        "planCanceled": "Plan canceled successfully!",
-        "cancelError": "Error canceling plan"
-      },
       "logout": {
         "title": "Sign out",
         "message": "Are you sure you want to sign out?",
@@ -352,7 +324,16 @@
       "bioPlaceholder": "Tell us a little about yourself...",
       "phonePlaceholder": "(00) 00000-0000",
       "locationPlaceholder": "Your city, state",
-      "instagramPlaceholder": "@yourusername"
+      "instagramPlaceholder": "@yourusername",
+      "photoSelected": "Photo selected! Click \"Save Changes\" to apply.",
+      "loadingFavorites": "Loading favorites...",
+      "noFavorites": "No favorites found",
+      "uploading": "Uploading...",
+      "saving": "Saving...",
+      "changePhotoHint": "Tap to change photo",
+      "removeFavorite": "Remove from favorites",
+      "openSettings": "Open Settings",
+      "deactivateAccount": "Deactivate your account"
     }
   },
   "components": {
@@ -414,6 +395,14 @@
     "unknown": "Unknown error",
     "tryAgain": "Try again",
     "checkConnection": "Check your connection"
+  },
+  "premium": {
+    "overlay": {
+      "title": "Unlock Features",
+      "subtitle": "Explore {feature} and much more with our full version",
+      "notice": "Be a limitless finder. Learn more",
+      "learnMore": "Learn more"
+    }
   },
   "languages": {
     "pt-br": "Português",

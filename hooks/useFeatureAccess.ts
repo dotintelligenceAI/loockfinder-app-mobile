@@ -10,6 +10,11 @@ export interface FeatureAccess {
   isUpgradeModalVisible: boolean;
   handleUpgrade: () => void;
   handleGoHome: () => void;
+  upgradeModalProps: {
+    visible: boolean;
+    onClose: () => void;
+    onUpgradeSuccess: () => void;
+  };
 }
 
 export function useFeatureAccess(featureName: string, featureDescription: string, iconName: keyof typeof import('@expo/vector-icons').Ionicons.glyphMap): FeatureAccess {
@@ -33,8 +38,22 @@ export function useFeatureAccess(featureName: string, featureDescription: string
   };
 
   const handleUpgrade = () => {
-    hideUpgradeModal();
-    router.push('/auth/plans' as any);
+    // Não fechar o modal aqui, deixar o UpgradeModal gerenciar
+    // O modal será fechado quando a compra for concluída
+  };
+
+  const handleUpgradeSuccess = () => {
+    // Recarregar dados do usuário após upgrade bem-sucedido
+    if (user?.id) {
+      subscriptionsService.getProfileWithPlan(user.id).then(response => {
+        if (response.success && response.data) {
+          const planSlug = response.data.plan?.slug || 'free';
+          const status = response.data.subscription_status || 'free';
+          setUserPlan(planSlug);
+          setSubscriptionStatus(status);
+        }
+      });
+    }
   };
 
   const handleGoHome = () => {
@@ -90,5 +109,10 @@ export function useFeatureAccess(featureName: string, featureDescription: string
     isUpgradeModalVisible,
     handleUpgrade,
     handleGoHome,
+    upgradeModalProps: {
+      visible: isUpgradeModalVisible,
+      onClose: hideUpgradeModal,
+      onUpgradeSuccess: handleUpgradeSuccess,
+    },
   };
 }

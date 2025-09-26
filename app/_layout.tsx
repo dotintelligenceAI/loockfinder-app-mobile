@@ -9,7 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { GlobalLanguageSelector, GlobalPreloader } from '@/components';
+import { ErrorBoundary, GlobalLanguageSelector, GlobalPreloader } from '@/components';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { I18nProvider } from '@/contexts/I18nContext';
 import { PreloaderProvider } from '@/contexts/PreloaderContext';
@@ -29,28 +29,30 @@ export default function RootLayout() {
   }
 
   return (
-    <I18nProvider>
-      <PreloaderProvider>
-        <TabBarVisibilityProvider>
-          <AuthProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              <SafeAreaProvider>
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen name="auth" options={{ headerShown: false }} />
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                  <Stack.Screen name="+not-found" />
-                </Stack>
-                <StatusBar style="dark" translucent backgroundColor="transparent" hidden={false} />
-                <GlobalPreloader />
-                {pathname && (pathname === '/(tabs)/home' || pathname.endsWith('/home')) && (
-                  <GlobalLanguageSelector />
-                )}
-              </SafeAreaProvider>
-            </ThemeProvider>
-          </AuthProvider>
-        </TabBarVisibilityProvider>
-      </PreloaderProvider>
-    </I18nProvider>
+    <ErrorBoundary>
+      <I18nProvider>
+        <PreloaderProvider>
+          <TabBarVisibilityProvider>
+            <AuthProvider>
+              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <SafeAreaProvider>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="index" options={{ headerShown: false }} />
+                    <Stack.Screen name="auth" options={{ headerShown: false }} />
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="+not-found" />
+                  </Stack>
+                  <StatusBar style="dark" translucent backgroundColor="transparent" hidden={false} />
+                  <GlobalPreloader />
+                  {pathname && (pathname === '/(tabs)/home' || pathname.endsWith('/home')) && (
+                    <GlobalLanguageSelector />
+                  )}
+                </SafeAreaProvider>
+              </ThemeProvider>
+            </AuthProvider>
+          </TabBarVisibilityProvider>
+        </PreloaderProvider>
+      </I18nProvider>
+    </ErrorBoundary>
   );
 }

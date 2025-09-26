@@ -1,4 +1,4 @@
-import { Gallery4Item, PlanLockNotice } from '@/components';
+import { Gallery4Item } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { usePreloader } from '@/contexts/PreloaderContext';
@@ -6,7 +6,6 @@ import { categoriesService, favoritesService, subcategoriesService, subscription
 import { Look, looksService } from '@/services/looksService';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -559,9 +558,7 @@ export default function HomeScreen() {
               <Ionicons name="search" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-          {!isSearchEnabled && (
-            <PlanLockNotice style={{ marginTop: 8 }} variant="compact" />
-          )}
+          
         </View>
       </LinearGradient>
 
@@ -632,20 +629,12 @@ export default function HomeScreen() {
               </View>
             ) : null}
             
-            {/* Mensagem de upgrade para usuários free quando visualizando categoria */}
+            {/* Mensagem informativa para usuários free quando visualizando categoria */}
             {isFreeUser && (selectedCategory && selectedCategory !== 'todos') && (
               <View style={styles.upgradeNoticeContainer}>
                 <Text style={styles.upgradeNoticeText}>
                   {t('tabs.home.upgrade.categoryMessage')}
                 </Text>
-                <TouchableOpacity 
-                  style={styles.upgradeNoticeButton}
-                  onPress={() => router.push('/auth/plans' as any)}
-                >
-                  <Text style={styles.upgradeNoticeButtonText}>
-                    {t('tabs.home.upgrade.upgradeButton')}
-                  </Text>
-                </TouchableOpacity>
               </View>
             )}
 
@@ -1013,34 +1002,24 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
 
-  // Estilos para mensagem de upgrade
+  // Estilos para mensagem discreta de upgrade
   upgradeNoticeContainer: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: 'rgba(52, 52, 53, 0.05)',
     marginHorizontal: 16,
-    marginVertical: 20,
-    padding: 20,
-    borderRadius: 16,
+    marginVertical: 16,
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: 'rgba(56, 56, 56, 0.1)',
   },
   upgradeNoticeText: {
-    fontSize: 14,
-    color: '#666666',
-    textAlign: 'center',
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  upgradeNoticeButton: {
-    backgroundColor: '#1a1a1a',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  upgradeNoticeButtonText: {
-    color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '600',
+    color: '#616161',
+    textAlign: 'center',
+    lineHeight: 18,
+    fontWeight: '500',
+    fontStyle: 'italic',
   },
 
 });

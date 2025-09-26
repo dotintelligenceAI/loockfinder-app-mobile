@@ -1,4 +1,4 @@
-import { FeatureAccessNotice, UpgradeModal } from '@/components';
+import { PremiumOverlay } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { usePreloader } from '@/contexts/PreloaderContext';
@@ -440,7 +440,7 @@ export default function CuponsScreen() {
       </View>
 
       {/* Lista de Cupons */}
-      {featureAccess.canAccess ? (
+      <View style={{ flex: 1, position: 'relative' }}>
         <FlatList
           data={cupons}
           keyExtractor={(item) => item.id}
@@ -471,22 +471,16 @@ export default function CuponsScreen() {
             )
           }
         />
-      ) : (
-        <FeatureAccessNotice
-          featureName={t('tabs.cupons.featureName')}
-          onUpgrade={featureAccess.handleUpgrade}
-          onGoHome={featureAccess.handleGoHome}
-        />
-      )}
+        
+        {/* Overlay Premium */}
+        {!featureAccess.canAccess && (
+          <PremiumOverlay
+            featureName={t('tabs.cupons.featureName')}
+            iconName="pricetag"
+          />
+        )}
+      </View>
 
-      {/* Modal de Upgrade */}
-      <UpgradeModal
-        visible={featureAccess.isUpgradeModalVisible}
-        onClose={featureAccess.hideUpgradeModal}
-        featureName={t('tabs.cupons.featureName')}
-        featureDescription={t('tabs.cupons.featureDescription')}
-        iconName="pricetag"
-      />
     </SafeAreaView>
   );
 }

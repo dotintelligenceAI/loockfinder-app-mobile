@@ -1,4 +1,4 @@
-import { FeatureAccessNotice, UpgradeModal } from '@/components';
+import { PremiumOverlay } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
@@ -61,7 +61,7 @@ export default function LinksScreen() {
         }
         const cats = await shoppingLinksService.getCategories();
         if (cats.success) {
-          setCategories([{ id: 'todos', name: t('tabs.links.categories.all'), slug: 'all' } as any, ...cats.data]);
+          setCategories([{ id: 'todos', name: t('All'), slug: 'all' } as any, ...cats.data]);
         }
         const lk = await shoppingLinksService.getLinksByCategory();
         if (lk.success) {
@@ -314,8 +314,8 @@ export default function LinksScreen() {
         />
       </View>
 
-      {/* Lista de Links / Paywall */}
-      {canAccess ? (
+      {/* Lista de Links */}
+      <View style={{ flex: 1, position: 'relative' }}>
         <FlatList
           data={links}
           keyExtractor={(item) => item.id}
@@ -333,22 +333,17 @@ export default function LinksScreen() {
           }
           showsVerticalScrollIndicator={false}
         />
-      ) : (
-        <FeatureAccessNotice
-          featureName={t('tabs.links.featureName')}
-          onUpgrade={featureAccess.handleUpgrade}
-          onGoHome={featureAccess.handleGoHome}
-        />
-      )}
+        
+        {/* Overlay Premium */}
+        {!canAccess && (
+          <PremiumOverlay
+            featureName={t('tabs.links.featureName')}
+            iconName="link"
+          />
+        )}
+      </View>
 
-      {/* Modal de Upgrade */}
-      <UpgradeModal
-        visible={featureAccess.isUpgradeModalVisible}
-        onClose={featureAccess.hideUpgradeModal}
-        featureName={t('tabs.links.featureName')}
-        featureDescription={t('tabs.links.featureDescription')}
-        iconName="link"
-      />
+      
     </SafeAreaView>
   );
 }

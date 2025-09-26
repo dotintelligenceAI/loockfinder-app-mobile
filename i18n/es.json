@@ -73,7 +73,11 @@
       "passwordMismatch": "Las contraseñas no coinciden",
       "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
       "signupError": "Error al crear cuenta",
-      "signupSuccess": "Cuenta creada exitosamente"
+      "signupSuccess": "Cuenta creada exitosamente",
+      "termsText": "Al registrarte aceptas los",
+      "termsAndConditions": "Términos y Condiciones",
+      "andThe": "y la",
+      "privacyPolicy": "Política de Privacidad"
     }
   },
   "tabs": {
@@ -88,7 +92,6 @@
       "allCategories": "Todas las categorías",
       "viewAll": "Ver todos",
       "noLooks": "encontraron looks",
-      "loadMore": "Cargar más",
       "searchPlaceholder": "Buscar looks...",
       "filterByCategory": "Filtrar por categoría",
       "sortBy": "Ordenar por",
@@ -104,7 +107,7 @@
         "remaining": "Cargar nuevos looks ({count} restantes)"
       },
       "upgrade": {
-        "categoryMessage": "Mejora para ver todos los looks de esta categoría",
+        "categoryMessage": "Explora looks sin límite con finder premium, conoce más",
         "upgradeButton": "Mejorar Ahora"
       }
     },
@@ -257,6 +260,10 @@
       "personalInfo": "Información personal",
       "name": "Nombre",
       "email": "Correo electrónico",
+      "bio": "Bio",
+      "phone": "Teléfono",
+      "location": "Ubicación",
+      "instagram": "Instagram",
       "avatar": "Foto de perfil",
       "changeAvatar": "Cambiar foto",
       "saveChanges": "Guardar cambios",
@@ -302,42 +309,6 @@
         "expires": "Vence el",
         "change": "Mejorar / Cambiar Plan"
       },
-      "plans": {
-        "title": "Elige tu plan",
-        "currentPlan": "Plan actual",
-        "detectingLocation": "Detectando tu ubicación...",
-        "popular": "Popular",
-        "currentBadge": "Plan Actual",
-        "activePlan": "Plan Activo",
-        "free": "Gratis",
-        "continueFree": "Continuar Gratis",
-        "subscribeNow": "Suscribirse Ahora",
-        "skipForNow": "Omitir por ahora",
-        "planDetails": "Ver descripción del plan",
-        "modalTitle": "Detalles del plan",
-        "description": "Descripción",
-        "featuresIncluded": "Características incluidas",
-        "planLimits": "Límites del plan",
-        "dailyChatMessages": "Mensajes diarios del chat",
-        "maxFavorites": "Máximo de favoritos",
-        "shoppingLinksAccess": "Acceso a enlaces de compra",
-        "premiumLooks": "Looks premium",
-        "initialLooksHome": "Looks iniciales en Inicio",
-        "dailyLookReloads": "Recargas diarias de looks",
-        "yes": "Sí",
-        "no": "No",
-        "close": "Cerrar",
-        "updatingPlan": "Actualizando plan...",
-        "preparingCheckout": "Preparando checkout...",
-        "cancelPlan": "Cancelar plan",
-        "cancelPlanTitle": "Cancelar Suscripción",
-        "cancelPlanMessage": "¿Estás seguro de que quieres cancelar tu suscripción? Perderás acceso a las funciones premium y volverás al plan gratuito.",
-        "cancelPlanConfirm": "Sí, cancelar",
-        "cancelPlanCancel": "Mantener suscripción",
-        "cancelingPlan": "Cancelando plan...",
-        "planCanceled": "¡Plan cancelado exitosamente!",
-        "cancelError": "Error al cancelar plan"
-      },
       "logout": {
         "title": "Cerrar sesión",
         "message": "¿Estás seguro de que quieres cerrar sesión?",
@@ -352,7 +323,16 @@
       "bioPlaceholder": "Cuéntanos un poco sobre ti...",
       "phonePlaceholder": "(00) 00000-0000",
       "locationPlaceholder": "Tu ciudad, estado",
-      "instagramPlaceholder": "@tusuario"
+      "instagramPlaceholder": "@tusuario",
+      "photoSelected": "Foto seleccionada! Haz clic en \"Guardar Cambios\" para aplicar.",
+      "loadingFavorites": "Cargando favoritos...",
+      "noFavorites": "No se encontraron favoritos",
+      "uploading": "Subiendo...",
+      "saving": "Guardando...",
+      "changePhotoHint": "Toca para cambiar foto",
+      "removeFavorite": "Quitar de favoritos",
+      "openSettings": "Abrir Configuración",
+      "deactivateAccount": "Desactivar tu cuenta"
     }
   },
   "components": {
@@ -414,6 +394,14 @@
     "unknown": "Error desconocido",
     "tryAgain": "Intentar de nuevo",
     "checkConnection": "Verifica tu conexión"
+  },
+  "premium": {
+    "overlay": {
+      "title": "Desbloquear Funciones",
+      "subtitle": "Explora {feature} y mucho más con nuestra versión completa",
+      "notice": "Conviértete en un buscador sin límites. Aprende más.",
+      "learnMore": "Saber más"
+    }
   },
   "languages": {
     "pt-br": "Português",

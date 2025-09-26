@@ -7,64 +7,59 @@ export default function Index() {
   const { isAuthenticated, loading, checkConnection } = useAuth();
   const { showPreloader, hidePreloader, updateMessage } = usePreloader();
   const [connectionChecked, setConnectionChecked] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('Iniciando LookFinder...');
+  const [initializationComplete, setInitializationComplete] = useState(false);
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
+    let messageInterval: ReturnType<typeof setInterval>;
 
     const initializeApp = async () => {
-      // Sequência de mensagens de loading
-      const messages = [
-        'Iniciando LookFinder...',
-        'Verificando conexão...',
-        'Carregando seu perfil...',
-        'Preparando sua experiência...'
-      ];
-
-      let messageIndex = 0;
-      
-      // Mostrar preloader
-      showPreloader('Iniciando LookFinder...');
-      
-      // Atualizar mensagem a cada 800ms
-      const messageInterval = setInterval(() => {
-        if (messageIndex < messages.length - 1) {
-          messageIndex++;
-          updateMessage(messages[messageIndex]);
-        }
-      }, 800);
-
-      // Verificar conexão com backend
       try {
-        const isConnected = await checkConnection();
-        if (!isConnected) {
-          updateMessage('Verificando conectividade...');
-        }
-      } catch (error) {
-        console.error('Connection check failed:', error);
-      }
+        // Sequência de mensagens de loading
+        const messages = [
+          'Iniciando LookFinder...',
+          'Verificando conexão...',
+          'Carregando seu perfil...',
+          'Preparando sua experiência...'
+        ];
 
-      setConnectionChecked(true);
-      clearInterval(messageInterval);
-
-      // Aguardar no mínimo 1.5 segundos para UX
-      timeoutId = setTimeout(() => {
-        if (!loading) {
-          if (isAuthenticated) {
-            updateMessage('Redirecionando para home...');
-            setTimeout(() => {
-              hidePreloader();
-              router.replace('/(tabs)/home' as any);
-            }, 300);
-          } else {
-            updateMessage('Redirecionando para boas-vindas...');
-            setTimeout(() => {
-              hidePreloader();
-              router.replace('/auth/welcome' as any);
-            }, 300);
+        let messageIndex = 0;
+        
+        // Mostrar preloader
+        showPreloader('Iniciando LookFinder...');
+        
+        // Atualizar mensagem a cada 800ms
+        messageInterval = setInterval(() => {
+          if (messageIndex < messages.length - 1) {
+            messageIndex++;
+            updateMessage(messages[messageIndex]);
           }
+        }, 800);
+
+        // Verificar conexão com backend
+        try {
+          const isConnected = await checkConnection();
+          if (!isConnected) {
+            updateMessage('Verificando conectividade...');
+          }
+        } catch (error) {
+          console.error('Connection check failed:', error);
+          // Continuar mesmo se a verificação de conexão falhar
         }
-      }, 1500);
+
+        setConnectionChecked(true);
+        clearInterval(messageInterval);
+
+        // Aguardar no mínimo 1.5 segundos para UX
+        timeoutId = setTimeout(() => {
+          setInitializationComplete(true);
+        }, 1500);
+      } catch (error) {
+        console.error('App initialization error:', error);
+        // Em caso de erro, ainda permitir que o app continue
+        setConnectionChecked(true);
+        setInitializationComplete(true);
+      }
     };
 
     initializeApp();
@@ -73,32 +68,46 @@ export default function Index() {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
+      if (messageInterval) {
+        clearInterval(messageInterval);
+      }
       hidePreloader();
     };
-  }, [hidePreloader]);
+  }, [showPreloader, hidePreloader, updateMessage, checkConnection]);
 
-  // Redirecionar quando loading terminar (mas só após verificação de conexão)
+  // Redirecionar quando inicialização estiver completa e loading terminar
   useEffect(() => {
-    if (!loading && connectionChecked) {
+    if (initializationComplete && !loading && connectionChecked) {
       const redirectTimeout = setTimeout(() => {
-        if (isAuthenticated) {
-          updateMessage('Bem-vinda de volta!');
-          setTimeout(() => {
-            hidePreloader();
+        try {
+          if (isAuthenticated) {
+            updateMessage('Bem-vinda de volta!');
+            setTimeout(() => {
+              hidePreloader();
+              router.replace('/(tabs)/home' as any);
+            }, 500);
+          } else {
+            updateMessage('Redirecionando...');
+            setTimeout(() => {
+              hidePreloader();
+              router.replace('/auth/welcome' as any);
+            }, 500);
+          }
+        } catch (error) {
+          console.error('Navigation error:', error);
+          // Fallback: tentar navegar mesmo com erro
+          hidePreloader();
+          if (isAuthenticated) {
             router.replace('/(tabs)/home' as any);
-          }, 500);
-        } else {
-          updateMessage('Redirecionando...');
-          setTimeout(() => {
-            hidePreloader();
+          } else {
             router.replace('/auth/welcome' as any);
-          }, 500);
+          }
         }
       }, 300);
 
       return () => clearTimeout(redirectTimeout);
     }
-  }, [loading, isAuthenticated, connectionChecked, updateMessage, hidePreloader]);
+  }, [initializationComplete, loading, isAuthenticated, connectionChecked, updateMessage, hidePreloader]);
 
   return null;
 } 

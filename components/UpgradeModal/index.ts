@@ -1,2 +1,1 @@
-export { default as UpgradeModal } from './UpgradeModal';
-
+export { default } from './UpgradeModal';

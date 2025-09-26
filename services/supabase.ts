@@ -1,16 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
+import 'react-native-url-polyfill/auto';
 import { supabaseConfig } from '../config/supabase';
+import { isWeb } from '../utils/platform';
 
-export const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+// Configurar storage condicionalmente
+let storage: any = undefined;
+if (!isWeb) {
+  try {
+    storage = require('@react-native-async-storage/async-storage').default;
+  } catch (error) {
+    console.warn('AsyncStorage não disponível:', error);
+  }
+}
+
+const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey, {
   auth: {
+    ...(storage && { storage }), // Só adiciona storage se estiver disponível
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
-    },
   },
   global: {
     headers: {
@@ -19,4 +27,5 @@ export const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey,
   },
 });
 
-export default supabase; 
+export { supabase };
+export default supabase;

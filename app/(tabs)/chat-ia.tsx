@@ -1,4 +1,4 @@
-import { FeatureAccessNotice, PlanLockNotice, UpgradeModal } from '@/components';
+import { PlanLockNotice, PremiumOverlay } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
@@ -351,137 +351,146 @@ export default function ChatIAScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {featureAccess.canAccess ? (
-        <>
-          {/* Header */}
-          <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.aiInfo}>
-            <View style={styles.aiAvatarLarge}>
-              <Image 
-                source={require('@/assets/images/avatarIA.jpg')}
-                style={styles.aiAvatarImage}
-                resizeMode="cover"
-              />
-            </View>
-            <View>
-              <Text style={styles.aiName}>{t('tabs.chat.aiName')}</Text>
-              <View style={styles.statusContainer}>
-                {/* <View style={styles.onlineIndicator} /> */}
-                <Text style={styles.aiStatus}>{t('tabs.chat.aiStatus')}</Text>
-              </View>
-            </View>
-          </View>
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={() => setShowHistory(true)}
-            >
-              <Ionicons name="time-outline" size={24} color="#666666" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={startNewChat}
-            >
-              <Ionicons name="add-outline" size={24} color="#666666" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Messages */}
-      <KeyboardAvoidingView 
-        style={styles.chatContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        {isFreeBlocked && (
-          <PlanLockNotice />
-        )}
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.messagesContainer}
-          contentContainerStyle={styles.messagesContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {messages.map((message, index) => renderMessage(message, index))}
-          
-          {isTyping && (
-            <Animatable.View
-              animation="fadeIn"
-              style={[styles.messageContainer, styles.aiMessage]}
-            >
-              <View style={styles.aiAvatar}>
+      {/* Container principal com overlay */}
+      <View style={{ flex: 1, position: 'relative' }}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View style={styles.aiInfo}>
+              <View style={styles.aiAvatarLarge}>
                 <Image 
                   source={require('@/assets/images/avatarIA.jpg')}
-                  style={styles.aiAvatarImageSmall}
+                  style={styles.aiAvatarImage}
                   resizeMode="cover"
                 />
               </View>
-              <View style={[styles.messageBubble, styles.aiBubble]}>
-                <View style={styles.typingIndicator}>
-                  <Animatable.View
-                    animation="pulse"
-                    iterationCount="infinite"
-                    delay={0}
-                    style={styles.typingDot}
-                  />
-                  <Animatable.View
-                    animation="pulse"
-                    iterationCount="infinite"
-                    delay={200}
-                    style={styles.typingDot}
-                  />
-                  <Animatable.View
-                    animation="pulse"
-                    iterationCount="infinite"
-                    delay={400}
-                    style={styles.typingDot}
-                  />
+              <View>
+                <Text style={styles.aiName}>{t('tabs.chat.aiName')}</Text>
+                <View style={styles.statusContainer}>
+                  {/* <View style={styles.onlineIndicator} /> */}
+                  <Text style={styles.aiStatus}>{t('tabs.chat.aiStatus')}</Text>
                 </View>
               </View>
-            </Animatable.View>
-          )}
-
-          {/* Quick Suggestions */}
-          {messages.length === 1 && (
-            <View style={styles.suggestionsContainer}>
-              <Text style={styles.suggestionsTitle}>{t('tabs.chat.suggestionsTitle')}</Text>
-              <View style={styles.suggestionsGrid}>
-                {quickSuggestions.map((suggestion, index) => renderQuickSuggestion(suggestion, index))}
-              </View>
             </View>
-          )}
-        </ScrollView>
-
-        {/* Input */}
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.textInput}
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder={t('tabs.chat.inputPlaceholder')}
-              placeholderTextColor="#999999"
-              multiline
-              maxLength={500}
-            />
-            <TouchableOpacity
-              style={[
-                styles.sendButton,
-                inputText.trim() ? styles.sendButtonActive : styles.sendButtonInactive,
-              ]}
-              onPress={() => sendMessage()}
-              disabled={!inputText.trim()}
-            >
-              <Ionicons 
-                name="send" 
-                size={20} 
-                color={inputText.trim() ? "#FFFFFF" : "#CCCCCC"} 
-              />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={() => setShowHistory(true)}
+              >
+                <Ionicons name="time-outline" size={24} color="#666666" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={startNewChat}
+              >
+                <Ionicons name="add-outline" size={24} color="#666666" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </KeyboardAvoidingView>
+
+        {/* Messages */}
+        <KeyboardAvoidingView 
+          style={styles.chatContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          {isFreeBlocked && (
+            <PlanLockNotice />
+          )}
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {messages.map((message, index) => renderMessage(message, index))}
+            
+            {isTyping && (
+              <Animatable.View
+                animation="fadeIn"
+                style={[styles.messageContainer, styles.aiMessage]}
+              >
+                <View style={styles.aiAvatar}>
+                  <Image 
+                    source={require('@/assets/images/avatarIA.jpg')}
+                    style={styles.aiAvatarImageSmall}
+                    resizeMode="cover"
+                  />
+                </View>
+                <View style={[styles.messageBubble, styles.aiBubble]}>
+                  <View style={styles.typingIndicator}>
+                    <Animatable.View
+                      animation="pulse"
+                      iterationCount="infinite"
+                      delay={0}
+                      style={styles.typingDot}
+                    />
+                    <Animatable.View
+                      animation="pulse"
+                      iterationCount="infinite"
+                      delay={200}
+                      style={styles.typingDot}
+                    />
+                    <Animatable.View
+                      animation="pulse"
+                      iterationCount="infinite"
+                      delay={400}
+                      style={styles.typingDot}
+                    />
+                  </View>
+                </View>
+              </Animatable.View>
+            )}
+
+            {/* Quick Suggestions */}
+            {messages.length === 1 && (
+              <View style={styles.suggestionsContainer}>
+                <Text style={styles.suggestionsTitle}>{t('tabs.chat.suggestionsTitle')}</Text>
+                <View style={styles.suggestionsGrid}>
+                  {quickSuggestions.map((suggestion, index) => renderQuickSuggestion(suggestion, index))}
+                </View>
+              </View>
+            )}
+          </ScrollView>
+
+          {/* Input */}
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.textInput}
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder={t('tabs.chat.inputPlaceholder')}
+                placeholderTextColor="#999999"
+                multiline
+                maxLength={500}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.sendButton,
+                  inputText.trim() ? styles.sendButtonActive : styles.sendButtonInactive,
+                ]}
+                onPress={() => sendMessage()}
+                disabled={!inputText.trim()}
+              >
+                <Ionicons 
+                  name="send" 
+                  size={20} 
+                  color={inputText.trim() ? "#FFFFFF" : "#CCCCCC"} 
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+
+        {/* Overlay Premium */}
+        {!featureAccess.canAccess && (
+          <PremiumOverlay
+            featureName="Chat com IA"
+            iconName="chatbubble-ellipses"
+          />
+        )}
+      </View>
 
       {/* History Modal */}
       <Modal
@@ -519,23 +528,7 @@ export default function ChatIAScreen() {
           )}
         </SafeAreaView>
       </Modal>
-        </>
-      ) : (
-        <FeatureAccessNotice
-          featureName="Chat com IA"
-          onUpgrade={featureAccess.handleUpgrade}
-          onGoHome={featureAccess.handleGoHome}
-        />
-      )}
 
-      {/* Modal de Upgrade */}
-      <UpgradeModal
-        visible={featureAccess.isUpgradeModalVisible}
-        onClose={featureAccess.hideUpgradeModal}
-        featureName="Chat com IA"
-        featureDescription="Converse com nossa IA especializada em moda e estilo para receber dicas personalizadas."
-        iconName="chatbubble-ellipses"
-      />
     </SafeAreaView>
   );
 }

@@ -2,18 +2,62 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { isWeb, withNativeCheck } from '../utils/platform';
 import { supabase } from './supabase';
 
+// Verificar se estamos no Expo Go ou em um development build
+const isExpoGo = Constants.appOwnership === 'expo';
+const isInDevelopment = __DEV__;
+
+// Função para verificar se push notifications estão disponíveis
+const isPushNotificationAvailable = (): boolean => {
+  // No Expo Go, push notifications não funcionam a partir do SDK 53
+  if (isExpoGo) {
+    console.warn('⚠️ Push notifications não estão disponíveis no Expo Go. Use um development build para funcionalidade completa.');
+    return false;
+  }
+  
+  // Em development builds e production, funciona normalmente
+  return true;
+};
+
 // Configurar como as notificações devem ser tratadas quando recebidas
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Só configurar se não estivermos no Expo Go e com tratamento de erro
+const initializeNotificationHandler = () => {
+  if (isWeb) {
+    console.log('⚠️ Notification handler skipped (Web platform)');
+    return;
+  }
+
+  try {
+    if (isPushNotificationAvailable()) {
+      withNativeCheck(
+        () => {
+          Notifications.setNotificationHandler({
+            handleNotification: async () => ({
+              shouldShowAlert: true,
+              shouldPlaySound: true,
+              shouldSetBadge: false,
+              shouldShowBanner: true,
+              shouldShowList: true,
+            }),
+          });
+          console.log('✅ Notification handler initialized successfully');
+        },
+        null,
+        'expo-notifications'
+      );
+    } else {
+      console.log('⚠️ Notification handler skipped (Expo Go or unavailable)');
+    }
+  } catch (error) {
+    console.error('❌ Failed to initialize notification handler:', error);
+    // Não falhar a inicialização do app por causa de notificações
+  }
+};
+
+// Inicializar de forma segura
+initializeNotificationHandler();
 
 export interface Aviso {
   id: string;
@@ -40,7 +84,18 @@ class NotificationsService {
    * Registrar dispositivo para receber push notifications
    */
   async registerForPushNotifications(): Promise<string | null> {
+    if (isWeb) {
+      console.log('🚫 Push notifications não disponíveis na web');
+      return null;
+    }
+
     let token = null;
+
+    // Verificar se push notifications estão disponíveis
+    if (!isPushNotificationAvailable()) {
+      console.log('🚫 Push notifications não disponíveis no Expo Go. Funcionalidade será habilitada no build de produção.');
+      return null;
+    }
 
     if (!Device.isDevice) {
       console.log('Push notifications só funcionam em dispositivos físicos');
@@ -192,15 +247,24 @@ class NotificationsService {
    * Enviar notificação local (para teste)
    */
   async sendLocalNotification(title: string, body: string, data?: NotificationData): Promise<void> {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title,
-        body,
-        data,
-        sound: 'default',
-      },
-      trigger: null, // Enviar imediatamente
-    });
+    if (isWeb) {
+      console.log('🚫 Local notifications não disponíveis na web');
+      return;
+    }
+
+    await withNativeCheck(
+      () => Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body,
+          data,
+          sound: 'default',
+        },
+        trigger: null, // Enviar imediatamente
+      }),
+      Promise.resolve(),
+      'expo-notifications'
+    );
   }
 
   /**
@@ -273,9 +337,25 @@ class NotificationsService {
    * Configurar listeners de notificações
    */
   setupNotificationListeners(): {
-    receivedSubscription: Notifications.Subscription;
-    responseSubscription: Notifications.Subscription;
+    receivedSubscription: Notifications.Subscription | null;
+    responseSubscription: Notifications.Subscription | null;
   } {
+    if (isWeb) {
+      console.log('🚫 Listeners de notificação não disponíveis na web');
+      return {
+        receivedSubscription: null,
+        responseSubscription: null,
+      };
+    }
+
+    // Verificar se push notifications estão disponíveis
+    if (!isPushNotificationAvailable()) {
+      console.log('🚫 Listeners de notificação não disponíveis no Expo Go.');
+      return {
+        receivedSubscription: null,
+        responseSubscription: null,
+      };
+    }
     // Listener para quando uma notificação é recebida
     const receivedSubscription = Notifications.addNotificationReceivedListener(notification => {
       console.log('📱 Notificação recebida:', notification);
