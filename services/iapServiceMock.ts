@@ -26,8 +26,8 @@ class IAPServiceMock {
 
   // IDs dos produtos no App Store Connect
   private readonly PRODUCT_IDS = {
-    PREMIUM_LIFETIME: 'com.lookfinder.premium.lifetime',
     PREMIUM_MONTHLY: 'com.lookfinder.premium.monthly',
+    PREMIUM_SEMESTRAL: 'com.lookfinder.premium.semest',
     PREMIUM_ANNUAL: 'com.lookfinder.premium.annual',
   };
 
@@ -70,28 +70,28 @@ class IAPServiceMock {
       // Produtos mock para desenvolvimento
       this.availableProducts = [
         {
-          productId: this.PRODUCT_IDS.PREMIUM_LIFETIME,
-          price: '9.99',
-          currency: 'USD',
-          title: 'LookFinder Premium Lifetime',
-          description: 'Acesso vitalício a todos os recursos premium',
-          localizedPrice: '$9.99',
-          type: 'non_consumable',
-        },
-        {
           productId: this.PRODUCT_IDS.PREMIUM_MONTHLY,
           price: '2.99',
           currency: 'USD',
-          title: 'LookFinder Premium Monthly',
+          title: 'Finder mensal',
           description: 'Assinatura mensal com todos os recursos premium',
           localizedPrice: '$2.99',
+          type: 'auto_renewable_subscription',
+        },
+        {
+          productId: this.PRODUCT_IDS.PREMIUM_SEMESTRAL,
+          price: '14.99',
+          currency: 'USD',
+          title: 'Finder semestral',
+          description: 'Assinatura semestral com todos os recursos premium',
+          localizedPrice: '$14.99',
           type: 'auto_renewable_subscription',
         },
         {
           productId: this.PRODUCT_IDS.PREMIUM_ANNUAL,
           price: '19.99',
           currency: 'USD',
-          title: 'LookFinder Premium Annual',
+          title: 'Finder Anual',
           description: 'Assinatura anual com todos os recursos premium',
           localizedPrice: '$19.99',
           type: 'auto_renewable_subscription',

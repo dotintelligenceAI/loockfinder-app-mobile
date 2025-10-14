@@ -66,7 +66,6 @@ CREATE TABLE IF NOT EXISTS iap_product_mappings (
 
 -- Inserir mapeamentos padrão
 INSERT INTO iap_product_mappings (iap_product_id, system_plan_id, plan_type) VALUES
-  ('com.lookfinder.premium.lifetime', 'lifetime', 'product'),
   ('com.lookfinder.premium.monthly', 'monthly', 'subscription'),
   ('com.lookfinder.premium.semest', 'semestral', 'subscription'),
   ('com.lookfinder.premium.annual', 'annual', 'subscription')
@@ -149,7 +148,8 @@ BEGIN
     NOW(),
     is_restored_param,
     'completed'
-  ) RETURNING id INTO purchase_id;
+  )
+  RETURNING id INTO purchase_id;
 
   -- Atualizar perfil do usuário
   UPDATE profiles SET
@@ -179,15 +179,14 @@ RETURNS BOOLEAN AS $$
 DECLARE
   has_purchase BOOLEAN := false;
 BEGIN
+  -- Verificar se o usuário tem assinatura ativa verificando o perfil
   SELECT EXISTS(
-    SELECT 1 FROM iap_purchases ip
-    JOIN iap_product_mappings ipm ON ip.product_id = ipm.iap_product_id
-    WHERE ip.user_id = user_id_param
-      AND ip.status = 'completed'
-      AND ipm.is_active = true
+    SELECT 1 FROM profiles
+    WHERE id = user_id_param
+      AND subscription_status = 'active'
       AND (
-        ipm.plan_type = 'product' OR
-        (ipm.plan_type = 'subscription' AND ip.purchase_date > NOW() - INTERVAL '1 year')
+        subscription_expires_at IS NULL OR 
+        subscription_expires_at > NOW()
       )
   ) INTO has_purchase;
 

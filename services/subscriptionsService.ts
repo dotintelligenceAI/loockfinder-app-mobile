@@ -217,8 +217,8 @@ class SubscriptionsService {
    */
   private mapPlanToIAPProduct(planId: string): string | null {
     const mappings: Record<string, string> = {
-      'lifetime': 'com.lookfinder.premium.lifetime',
-      'monthly': 'com.lookfinder.premium.monthly', 
+      'monthly': 'com.lookfinder.premium.monthly',
+      'semestral': 'com.lookfinder.premium.semest',
       'annual': 'com.lookfinder.premium.annual',
     };
 

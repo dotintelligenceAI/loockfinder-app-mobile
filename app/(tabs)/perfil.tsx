@@ -530,6 +530,36 @@ export default function PerfilScreen() {
                 </View>
               </View>
 
+              {/* Botão de Ver Planos / Upgrade */}
+              {planName === 'Finder Free' ? (
+                <TouchableOpacity 
+                  style={styles.upgradePlanButton}
+                  onPress={() => router.push('/upgrade')}
+                >
+                  <LinearGradient
+                    colors={['#FF6B6B', '#FF8E53']}
+                    style={styles.upgradePlanGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Ionicons name="star" size={20} color="#FFFFFF" />
+                    <Text style={styles.upgradePlanText}>Fazer Upgrade para Premium</Text>
+                    <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                  </LinearGradient>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity 
+                  style={styles.viewPlansButton}
+                  onPress={() => router.push('/upgrade')}
+                >
+                  <View style={styles.viewPlansContent}>
+                    <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+                    <Text style={styles.viewPlansText}>Ver Planos Disponíveis</Text>
+                    <Ionicons name="arrow-forward" size={18} color="#666666" />
+                  </View>
+                </TouchableOpacity>
+              )}
+
               {/* Botões de ação */}
               <View style={styles.actionButtons}>
                 <TouchableOpacity style={styles.editProfileButton} onPress={() => setEditModalVisible(true)}>
@@ -1048,6 +1078,56 @@ const styles = StyleSheet.create({
     color: '#666666',
     fontSize: 14,
     fontWeight: '600',
+  },
+  upgradePlanButton: {
+    width: '100%',
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  upgradePlanGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  upgradePlanText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    flex: 1,
+    textAlign: 'center',
+  },
+  viewPlansButton: {
+    width: '100%',
+    marginBottom: 20,
+    borderRadius: 16,
+    backgroundColor: '#F8F9FA',
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    overflow: 'hidden',
+  },
+  viewPlansContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  viewPlansText: {
+    color: '#1a1a1a',
+    fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
+    textAlign: 'center',
   },
   deactivateAccountButton: {
     alignSelf: 'center',

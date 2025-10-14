@@ -1,0 +1,72 @@
+Hello Apple Review Team,
+
+Thank you for reviewing LookFinder. I'm providing clear steps to locate and test the in-app purchases.
+
+=== HOW TO ACCESS IN-APP PURCHASES ===
+
+QUICKEST PATH (Recommended):
+1. Open LookFinder app
+2. Tap "Profile" tab (bottom right, person icon)
+3. Scroll down to find "Upgrade to Premium" or "Go Premium" button
+4. Tap the button
+5. You'll see 3 subscription plans with prices
+6. Tap any plan to test the purchase flow
+
+ALTERNATIVE PATHS:
+- Tap "Chat IA" tab → Modal appears if user is not premium → Tap "See Plans"
+- Try to access premium features → Upgrade modal appears → Tap "Upgrade"
+- Look for "⭐ Premium" or "Upgrade" buttons throughout the app
+
+=== PRODUCT IDS CONFIGURED ===
+
+All products are active in App Store Connect:
+
+1. com.lookfinder.premium.lifetime
+   - Type: Non-Consumable
+   - Price: $9.99
+   - One-time purchase for lifetime access
+
+2. com.lookfinder.premium.semest
+   - Type: Auto-Renewable Subscription
+   - Price: $2.99/month
+   - Monthly subscription
+
+3. com.lookfinder.premium.annual
+   - Type: Auto-Renewable Subscription
+   - Price: $19.99/year
+   - Annual subscription
+
+=== SANDBOX TESTING ===
+
+The app works correctly with Apple's sandbox environment:
+- Products are fetched automatically from App Store Connect
+- Use a sandbox test account to complete purchases
+- All receipts are validated properly
+- "Restore Purchases" button is available on the upgrade screen
+
+=== VERIFIED CONFIGURATIONS ===
+
+✓ Paid Apps Agreement accepted
+✓ All products configured and ready in App Store Connect
+✓ Products in "Ready to Submit" status
+✓ Subscription group configured ("LookFinder Premium")
+✓ Product IDs match between app code and App Store Connect
+✓ Restore purchases functionality implemented
+✓ Server-side receipt validation active
+
+=== TROUBLESHOOTING ===
+
+If products don't load immediately:
+- Wait 3-5 seconds for product loading
+- Loading indicator shows "Loading plans..."
+- Tap "Try Again" if needed
+- Ensure using valid sandbox test account
+
+=== ADDITIONAL SUPPORT ===
+
+If you encounter any issues during review, please let me know. I'm available to provide additional assistance or schedule a call.
+
+Thank you for your time.
+
+Best regards,
+LookFinder Development Team

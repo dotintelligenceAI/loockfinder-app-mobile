@@ -8,16 +8,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -54,10 +54,10 @@ export default function UpgradeScreen() {
     try {
       setLoadingProducts(true);
       
-      // Verificar se estamos em ambiente web ou Expo Go
+      // Verificar se estamos em ambiente web ou Expo Go (desenvolvimento)
       if (Platform.OS === 'web' || Constants.appOwnership === 'expo') {
-        // Usar mock para desenvolvimento
-        console.log('🔄 Usando IAP Mock para desenvolvimento...');
+        // DESENVOLVIMENTO: Usar mock para preview
+        console.log('🔄 [DEV] Usando IAP Mock para desenvolvimento...');
         const iapService = require('../services/iapServiceMock').iapService;
         
         const initResult = await iapService.initialize();
@@ -67,9 +67,9 @@ export default function UpgradeScreen() {
             setAvailableProducts(iapService.getAvailableProducts());
           }
         }
-      } else {
-        // Usar IAP real para builds nativos
-        console.log('🔄 Usando IAP real...');
+      } else if (Platform.OS === 'ios') {
+        // iOS: Usar Apple In-App Purchase (IAP)
+        console.log('🍎 Carregando produtos da Apple App Store...');
         try {
           const iapService = require('../services/iapService').iapService;
           
@@ -77,25 +77,54 @@ export default function UpgradeScreen() {
           if (initResult.success) {
             const productsResult = await iapService.loadProducts();
             if (productsResult.success) {
-              setAvailableProducts(iapService.getAvailableProducts());
+              const products = iapService.getAvailableProducts();
+              console.log('✅ Produtos Apple carregados:', products.length);
+              setAvailableProducts(products);
+            } else {
+              console.warn('⚠️ Nenhum produto Apple encontrado, usando fallback');
+              throw new Error('Produtos Apple não disponíveis');
             }
           }
-        } catch (nativeError) {
-          console.warn('⚠️ IAP nativo não disponível, usando mock:', nativeError);
-          // Fallback para mock se IAP nativo falhar
+        } catch (iosError) {
+          console.error('❌ Erro ao carregar produtos Apple:', iosError);
+          // Fallback para mock em caso de erro
           const iapService = require('../services/iapServiceMock').iapService;
+          const initResult = await iapService.initialize();
+          if (initResult.success) {
+            await iapService.loadProducts();
+            setAvailableProducts(iapService.getAvailableProducts());
+          }
+        }
+      } else if (Platform.OS === 'android') {
+        // ANDROID: Usar Google Play Billing (IAP)
+        // TODO: Futuramente pode usar Stripe se preferir
+        console.log('🤖 Carregando produtos do Google Play Store...');
+        try {
+          const iapService = require('../services/iapService').iapService;
+          
           const initResult = await iapService.initialize();
           if (initResult.success) {
             const productsResult = await iapService.loadProducts();
             if (productsResult.success) {
-              setAvailableProducts(iapService.getAvailableProducts());
+              const products = iapService.getAvailableProducts();
+              console.log('✅ Produtos Google Play carregados:', products.length);
+              setAvailableProducts(products);
             }
+          }
+        } catch (androidError) {
+          console.error('❌ Erro ao carregar produtos Google Play:', androidError);
+          // Fallback para mock
+          const iapService = require('../services/iapServiceMock').iapService;
+          const initResult = await iapService.initialize();
+          if (initResult.success) {
+            await iapService.loadProducts();
+            setAvailableProducts(iapService.getAvailableProducts());
           }
         }
       }
     } catch (error) {
-      console.error('❌ Erro ao carregar produtos:', error);
-      // Em caso de erro, mostrar produtos mock como fallback
+      console.error('❌ Erro geral ao carregar produtos:', error);
+      // Fallback final: mostrar produtos mock
       try {
         const iapService = require('../services/iapServiceMock').iapService;
         const initResult = await iapService.initialize();
@@ -183,13 +212,20 @@ export default function UpgradeScreen() {
   // Mapear produtos IAP para exibição
   const getPlanDisplayInfo = (product: any) => {
     const isSubscription = product.type === 'auto_renewable_subscription';
-    const isLifetime = product.productId === 'com.lookfinder.premium.lifetime';
+    const isMonthly = product.productId === 'com.lookfinder.premium.monthly';
+    const isSemestral = product.productId === 'com.lookfinder.premium.semest';
+    const isAnnual = product.productId === 'com.lookfinder.premium.annual';
+    
+    // Determinar período de exibição
+    let period = 'por mês';
+    if (isSemestral) period = 'por 6 meses';
+    else if (isAnnual) period = 'por ano';
     
     return {
       id: product.productId,
       name: product.title,
       price: product.localizedPrice,
-      period: isLifetime ? 'Uma vez' : (isSubscription ? 'por mês' : 'por ano'),
+      period,
       description: product.description,
       features: [
         'Acesso ilimitado a todos os looks',
@@ -197,10 +233,10 @@ export default function UpgradeScreen() {
         'Salvar looks ilimitados',
         'Sem anúncios',
         'Suporte prioritário',
-        ...(isLifetime ? [] : ['Renovação automática'])
+        'Renovação automática'
       ],
-      popular: product.productId === 'com.lookfinder.premium.monthly',
-      type: isSubscription ? 'subscription' : 'lifetime'
+      popular: isMonthly,
+      type: 'subscription'
     };
   };
 

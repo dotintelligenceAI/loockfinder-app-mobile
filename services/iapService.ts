@@ -8,6 +8,7 @@ import {
   Purchase,
   requestPurchase,
 } from 'react-native-iap';
+import { iapConfig } from '../config/supabase';
 import { supabase } from './supabase';
 
 export interface IAPProduct {
@@ -26,10 +27,7 @@ class IAPService {
 
   // IDs dos produtos no App Store Connect
   private readonly PRODUCT_IDS = {
-    // Produtos não consumíveis (one-time purchases)
-    PREMIUM_LIFETIME: 'com.lookfinder.premium.lifetime',
-    
-    // Assinaturas automáticas (tratadas como produtos)
+    // Assinaturas automáticas
     PREMIUM_MONTHLY: 'com.lookfinder.premium.monthly',
     PREMIUM_SEMESTRAL: 'com.lookfinder.premium.semest',
     PREMIUM_ANNUAL: 'com.lookfinder.premium.annual',
@@ -71,10 +69,9 @@ class IAPService {
     try {
       console.log('🛍️ Carregando produtos IAP...');
 
-      // Carregar todos os produtos (incluindo assinaturas)
+      // Carregar todos os produtos (assinaturas)
       const products = await fetchProducts({
         skus: [
-          this.PRODUCT_IDS.PREMIUM_LIFETIME,
           this.PRODUCT_IDS.PREMIUM_MONTHLY,
           this.PRODUCT_IDS.PREMIUM_SEMESTRAL,
           this.PRODUCT_IDS.PREMIUM_ANNUAL,
@@ -167,6 +164,68 @@ class IAPService {
   }
 
   /**
+   * Valida receipt com a Apple (Production e Sandbox)
+   */
+  private async validateReceipt(receiptData: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('🔐 Validando receipt com Apple...');
+
+      // IMPORTANTE: A Apple recomenda tentar produção primeiro, depois sandbox
+      const productionUrl = 'https://buy.itunes.apple.com/verifyReceipt';
+      const sandboxUrl = 'https://sandbox.itunes.apple.com/verifyReceipt';
+
+      // 1. Tentar validar no ambiente de produção primeiro
+      console.log('🔄 Tentando validação em produção...');
+      let response = await fetch(productionUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          'receipt-data': receiptData,
+          'password': iapConfig.appleSharedSecret || '', // Shared Secret para assinaturas
+          'exclude-old-transactions': true
+        })
+      });
+
+      let result = await response.json();
+
+      // 2. Se recebeu erro 21007 (sandbox receipt usado em produção)
+      // Validar no ambiente sandbox
+      if (result.status === 21007) {
+        console.log('🔄 Receipt de sandbox detectado, validando em sandbox...');
+        response = await fetch(sandboxUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            'receipt-data': receiptData,
+            'password': iapConfig.appleSharedSecret || '', // Shared Secret para assinaturas
+            'exclude-old-transactions': true
+          })
+        });
+
+        result = await response.json();
+      }
+
+      // 3. Verificar status da validação
+      if (result.status === 0) {
+        console.log('✅ Receipt validado com sucesso');
+        return { success: true };
+      } else {
+        console.error('❌ Falha na validação do receipt:', result.status);
+        return { 
+          success: false, 
+          error: `Validation failed with status: ${result.status}` 
+        };
+      }
+    } catch (error) {
+      console.error('❌ Erro na validação de receipt:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro ao validar receipt' 
+      };
+    }
+  }
+
+  /**
    * Processa uma compra
    */
   private async processPurchase(purchase: Purchase): Promise<{ success: boolean; error?: string }> {
@@ -177,6 +236,26 @@ class IAPService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         return { success: false, error: 'Usuário não autenticado' };
+      }
+
+      // CRÍTICO: Validar receipt com a Apple antes de processar
+      // Obter receipt data (campo diferente em iOS vs Android)
+      const receiptData = (purchase as any).transactionReceipt || (purchase as any).purchaseToken;
+      
+      if (receiptData) {
+        console.log('🔐 Validando receipt antes de processar...');
+        const validationResult = await this.validateReceipt(receiptData);
+        
+        if (!validationResult.success) {
+          console.error('❌ Receipt inválido:', validationResult.error);
+          return { 
+            success: false, 
+            error: 'Falha na validação do recibo. Por favor, tente novamente.' 
+          };
+        }
+        console.log('✅ Receipt validado com sucesso');
+      } else {
+        console.warn('⚠️ Purchase sem receipt, prosseguindo com cautela...');
       }
 
       // Mapear produto IAP para plano do sistema
@@ -251,11 +330,6 @@ class IAPService {
    */
   private getPlanMapping(productId: string): { planId: string; billingPeriod: string; isLifetime: boolean } | null {
     const mappings: Record<string, { planId: string; billingPeriod: string; isLifetime: boolean }> = {
-      [this.PRODUCT_IDS.PREMIUM_LIFETIME]: { 
-        planId: 'lifetime', 
-        billingPeriod: 'lifetime', 
-        isLifetime: true 
-      },
       [this.PRODUCT_IDS.PREMIUM_MONTHLY]: { 
         planId: 'monthly', 
         billingPeriod: 'monthly', 

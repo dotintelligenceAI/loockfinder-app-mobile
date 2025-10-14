@@ -5,6 +5,9 @@
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
+    "create-looks": "node ./scripts/create-looks-from-storage.js",
+    "test-storage": "node ./scripts/test-supabase-storage.js",
+    "debug-storage": "node ./scripts/debug-storage.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
