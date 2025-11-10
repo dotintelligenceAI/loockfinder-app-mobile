@@ -2,7 +2,7 @@ import { PremiumOverlay } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
-import { Currency, geolocationService, ShoppingCategory, ShoppingLink, shoppingLinksService, subscriptionsService } from '@/services';
+import { ShoppingCategory, ShoppingLink, shoppingLinksService, subscriptionsService } from '@/services';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
@@ -22,9 +22,6 @@ import {
 interface LinkItem extends ShoppingLink {
   // Campos de exibição derivados
   image: string;
-  priceLabel: string;
-  originalPriceLabel?: string;
-  discountLabel?: string;
   store?: string;
 }
 
@@ -100,13 +97,6 @@ export default function LinksScreen() {
     return data.map((l) => ({
       ...l,
       image: (l as any).image_url || '',
-      priceLabel: l.price != null ? formatCurrency(l.price, (l.currency as any) || 'BRL') : '',
-      originalPriceLabel:
-        l.original_price != null ? formatCurrency(l.original_price, (l.currency as any) || 'BRL') : undefined,
-      discountLabel:
-        l.price != null && l.original_price != null && l.original_price > 0
-          ? `${Math.round(((l.original_price - l.price) / l.original_price) * 100)}% OFF`
-          : undefined,
     }));
   };
 
@@ -166,11 +156,6 @@ export default function LinksScreen() {
   const generateFallbackImage = (url?: string | null, title?: string | null): string => {
     // Usar ícone do app como fallback para todos os casos
     return 'fallback';
-  };
-
-  const formatCurrency = (value: number, currency: string) => {
-    // Usar o serviço de geolocalização para formatação adequada
-    return geolocationService.formatCurrency(value, (currency as Currency) || 'BRL');
   };
 
   const onRefresh = async () => {
@@ -234,11 +219,6 @@ export default function LinksScreen() {
 
       {/* Badges no topo */}
       <View style={styles.linkBadges}>
-        {item.discountLabel && (
-          <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>{item.discountLabel}</Text>
-          </View>
-        )}
         {item.is_url_valid === false && (
           <View style={styles.invalidBadge}>
             <Ionicons name="warning" size={10} color="#fff" />
@@ -251,14 +231,6 @@ export default function LinksScreen() {
         <Text style={styles.linkTitle} numberOfLines={2}>
           {item.title || getHostname(item.url)}
         </Text>
-        {item.priceLabel && (
-          <View style={styles.linkPriceContainer}>
-            <Text style={styles.linkPrice}>{item.priceLabel}</Text>
-            {item.originalPriceLabel && (
-              <Text style={styles.linkOriginalPrice}>{item.originalPriceLabel}</Text>
-            )}
-          </View>
-        )}
         <Text style={styles.linkDomain}>{getHostname(item.url)}</Text>
       </View>
     </TouchableOpacity>
@@ -452,22 +424,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: 4,
   },
-  linkPriceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  linkPrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginRight: 6,
-  },
-  linkOriginalPrice: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    textDecorationLine: 'line-through',
-  },
   linkDomain: {
     fontSize: 11,
     color: 'rgba(255,255,255,0.8)',
@@ -512,17 +468,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999999',
     textDecorationLine: 'line-through',
-  },
-  discountBadge: {
-    backgroundColor: '#FF6B6B',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  discountText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#FFFFFF',
   },
   invalidBadge: {
     backgroundColor: '#DC2626',

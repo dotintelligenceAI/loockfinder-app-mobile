@@ -506,11 +506,6 @@ export default function PerfilScreen() {
               <Text style={styles.profileName}>
                 {profile?.name || user?.fullName || 'Finder'}
               </Text>
-              {!!planName && (
-                <Text style={styles.planBadge}>
-                  {planName}
-                </Text>
-              )}
               <Text style={styles.profileBio}>
                 {profile?.bio || t('tabs.perfil.defaultBio')}
               </Text>
@@ -529,36 +524,6 @@ export default function PerfilScreen() {
                   <Text style={styles.statLabel}>{t('tabs.perfil.favorites')}</Text>
                 </View>
               </View>
-
-              {/* Botão de Ver Planos / Upgrade */}
-              {planName === 'Finder Free' ? (
-                <TouchableOpacity 
-                  style={styles.upgradePlanButton}
-                  onPress={() => router.push('/upgrade')}
-                >
-                  <LinearGradient
-                    colors={['#FF6B6B', '#FF8E53']}
-                    style={styles.upgradePlanGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                  >
-                    <Ionicons name="star" size={20} color="#FFFFFF" />
-                    <Text style={styles.upgradePlanText}>Fazer Upgrade para Premium</Text>
-                    <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-                  </LinearGradient>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity 
-                  style={styles.viewPlansButton}
-                  onPress={() => router.push('/upgrade')}
-                >
-                  <View style={styles.viewPlansContent}>
-                    <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-                    <Text style={styles.viewPlansText}>Ver Planos Disponíveis</Text>
-                    <Ionicons name="arrow-forward" size={18} color="#666666" />
-                  </View>
-                </TouchableOpacity>
-              )}
 
               {/* Botões de ação */}
               <View style={styles.actionButtons}>
@@ -683,29 +648,14 @@ export default function PerfilScreen() {
             <View style={{ marginBottom: 16, marginTop: 16 }}>
               <View style={{ backgroundColor: '#F8F9FA', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#E5E7EB' }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <Text style={{ color: '#1a1a1a', fontWeight: '700' }}>{planName || t('tabs.perfil.plan.free')}</Text>
-                  {planName === 'Finder Free' && (
-                    <TouchableOpacity 
-                      style={{ 
-                        backgroundColor: '#1a1a1a', 
-                        paddingHorizontal: 12, 
-                        paddingVertical: 6, 
-                        borderRadius: 8,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 4
-                      }}
-                      onPress={() => router.push('/upgrade')}
-                    >
-                      <Ionicons name="star" size={14} color="#FFFFFF" />
-                      <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
-                        Upgrade
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                  <Text style={{ color: '#1a1a1a', fontWeight: '700' }}>
+                    {planName || t('tabs.perfil.plan.free')}
+                  </Text>
                 </View>
                 <Text style={{ color: '#666666', fontSize: 13, marginTop: 6, lineHeight: 18 }}>
-                  {t('premium.overlay.notice')}
+                  {planName === 'Finder Free'
+                    ? t('tabs.perfil.limits.freeDescription')
+                    : t('tabs.perfil.limits.activeDescription')}
                 </Text>
                 <TouchableOpacity 
                   style={{ marginTop: 8, paddingVertical: 4 }}
@@ -990,19 +940,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
-  planBadge: {
-    alignSelf: 'center',
-    backgroundColor: '#F1F5FF',
-    color: '#1a1a1a',
-    borderColor: '#D0E0FF',
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
   profileBio: {
     fontSize: 16,
     color: '#666666',
@@ -1078,56 +1015,6 @@ const styles = StyleSheet.create({
     color: '#666666',
     fontSize: 14,
     fontWeight: '600',
-  },
-  upgradePlanButton: {
-    width: '100%',
-    marginBottom: 20,
-    borderRadius: 16,
-    overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#FF6B6B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  upgradePlanGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    gap: 10,
-  },
-  upgradePlanText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    flex: 1,
-    textAlign: 'center',
-  },
-  viewPlansButton: {
-    width: '100%',
-    marginBottom: 20,
-    borderRadius: 16,
-    backgroundColor: '#F8F9FA',
-    borderWidth: 2,
-    borderColor: '#4CAF50',
-    overflow: 'hidden',
-  },
-  viewPlansContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    gap: 10,
-  },
-  viewPlansText: {
-    color: '#1a1a1a',
-    fontSize: 16,
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'center',
   },
   deactivateAccountButton: {
     alignSelf: 'center',

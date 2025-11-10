@@ -108,8 +108,7 @@
         "remaining": "Load new looks ({count} left)"
       },
       "upgrade": {
-        "categoryMessage": "Explore endless looks with finder premium, learn more",
-        "upgradeButton": "Upgrade Now"
+        "categoryMessage": "Some categories stay unavailable on the current free access."
       }
     },
     "chat": {
@@ -231,7 +230,7 @@
       "featureDescription": "Access exclusive coupons with discounts up to 70% at your favorite stores."
     },
     "links": {
-      "title": "Links",
+      "title": "Pieces",
       "usefulLinks": "Useful links",
       "about": "About",
       "privacy": "Privacy",
@@ -244,16 +243,16 @@
       "version": "Version",
       "developedBy": "Developed by",
       "allRightsReserved": "All rights reserved",
-      "headerTitle": "SHOPPING LINKS",
-      "welcomeUserPrefix": "Find the best deals,",
-      "buy": "Buy",
-      "invalidLink": "Invalid link",
+      "headerTitle": "DISCOVER PIECES",
+      "welcomeUserPrefix": "Explore style references,",
+      "buy": "Open",
+      "invalidLink": "Link unavailable",
       "paywall": {
-        "message": "Shopping links are exclusive to subscribers.",
-        "cta": "Upgrade now"
+        "message": "Some highlighted pieces are not available with the current access.",
+        "cta": "Contact support"
       },
-      "featureName": "Shopping Links",
-      "featureDescription": "Access thousands of shopping links with exclusive prices and special offers."
+      "featureName": "Highlighted pieces",
+      "featureDescription": "Discover suggestions of pieces and inspiring references."
     },
     "perfil": {
       "title": "Profile",
@@ -308,7 +307,13 @@
       "plan": {
         "free": "Finder Free",
         "expires": "Expires on",
-        "change": "Upgrade / Change Plan"
+        "change": "Manage plan"
+      },
+      "limits": {
+        "freeTitle": "Finder Free plan",
+        "freeDescription": "Some functions remain unavailable on this free plan.",
+        "activeTitle": "Active plan",
+        "activeDescription": "Your profile already has access configured to use this feature."
       },
       "logout": {
         "title": "Sign out",
@@ -363,25 +368,14 @@
       "pleaseWait": "Please wait..."
     },
     "planLock": {
-      "freeMessage": "Finder Free plan",
-      "upgradeCta": "Upgrade"
+      "heading": "Feature unavailable",
+      "freeMessage": "This feature is not available on the free access.",
+      "freeDetails": "Some functionality stays reserved for profiles with full access."
     },
     "featureAccess": {
       "title": "Limited Access",
-      "description": "{featureName} is available only for premium users",
-      "upgradeButton": "Upgrade Now",
-      "homeButton": "Back to Home"
-    },
-    "upgradeModal": {
-      "title": "Unlock {featureName}",
-      "premiumFeatureMessage": "This feature is available only for premium users",
-      "features": {
-        "unlimitedAccess": "Unlimited access to {featureName}",
-        "aiPersonalizedLooks": "AI-powered personalized looks",
-        "unlimitedFavorites": "Unlimited favorites",
-        "prioritySupport": "Priority support"
-      },
-      "upgradeButton": "Upgrade Now",
+      "description": "{featureName} is not available on the free plan.",
+      "notice": "We are preparing new things here. Meanwhile, enjoy the experiences already released.",
       "homeButton": "Back to Home"
     }
   },
@@ -398,11 +392,17 @@
   },
   "premium": {
     "overlay": {
-      "title": "Unlock Features",
-      "subtitle": "Explore {feature} and much more with our full version",
-      "notice": "Be a limitless finder. Learn more",
+      "title": "Free Plan Limitation",
+      "subtitle": "{feature} is not available with the current access.",
+      "notice": "Contact our support team if you need access to this feature.",
       "learnMore": "Learn more"
     }
+  },
+  "legal": {
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "subscriptionDisclaimer": "Subscriptions automatically renew. You can cancel at any time in your account settings.",
+    "bySubscribing": "By subscribing, you agree to our {terms} and {privacy}."
   },
   "languages": {
     "pt-br": "Português",

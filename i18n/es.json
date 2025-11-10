@@ -107,8 +107,7 @@
         "remaining": "Cargar nuevos looks ({count} restantes)"
       },
       "upgrade": {
-        "categoryMessage": "Explora looks sin límite con finder premium, conoce más",
-        "upgradeButton": "Mejorar Ahora"
+        "categoryMessage": "Algunas categorías no están disponibles con el acceso gratuito actual."
       }
     },
     "chat": {
@@ -230,7 +229,7 @@
       "featureDescription": "Accede a cupones exclusivos con descuentos de hasta 70% en tus tiendas favoritas."
     },
     "links": {
-      "title": "Enlaces",
+      "title": "Piezas",
       "usefulLinks": "Enlaces útiles",
       "about": "Acerca de",
       "privacy": "Privacidad",
@@ -243,16 +242,16 @@
       "version": "Versión",
       "developedBy": "Desarrollado por",
       "allRightsReserved": "Todos los derechos reservados",
-      "headerTitle": "ENLACES DE COMPRA",
-      "welcomeUserPrefix": "Encuentra las mejores ofertas,",
-      "buy": "Comprar",
-      "invalidLink": "Enlace inválido",
+      "headerTitle": "DESCUBRE PIEZAS",
+      "welcomeUserPrefix": "Explora referencias de estilo,",
+      "buy": "Abrir",
+      "invalidLink": "Enlace no disponible",
       "paywall": {
-        "message": "Los enlaces de compras son exclusivos para suscriptores.",
-        "cta": "Mejorar ahora"
+        "message": "Algunas piezas destacadas no están disponibles con el acceso actual.",
+        "cta": "Contactar soporte"
       },
-      "featureName": "Enlaces de Compra",
-      "featureDescription": "Accede a miles de enlaces de compra con precios exclusivos y ofertas especiales."
+      "featureName": "Piezas destacadas",
+      "featureDescription": "Descubre sugerencias de piezas y referencias inspiradoras."
     },
     "perfil": {
       "title": "Perfil",
@@ -307,7 +306,13 @@
       "plan": {
         "free": "Finder Free",
         "expires": "Vence el",
-        "change": "Mejorar / Cambiar Plan"
+        "change": "Administrar plan"
+      },
+      "limits": {
+        "freeTitle": "Plan Finder Free",
+        "freeDescription": "Algunas funciones no están disponibles en este plan gratuito.",
+        "activeTitle": "Plan activo",
+        "activeDescription": "Tu perfil ya está configurado para usar esta función."
       },
       "logout": {
         "title": "Cerrar sesión",
@@ -362,26 +367,15 @@
       "pleaseWait": "Por favor, espera..."
     },
     "planLock": {
-      "freeMessage": "Estás en el plan Finder Free",
-      "upgradeCta": "Mejorar para acceder"
+      "heading": "Función no disponible",
+      "freeMessage": "Esta función no está disponible en el acceso gratuito.",
+      "freeDetails": "Algunas funcionalidades quedan reservadas para perfiles con acceso completo."
     },
     "featureAccess": {
-      "title": "Acceso Limitado",
-      "description": "{featureName} está disponible solo para usuarios premium",
-      "upgradeButton": "Mejorar Ahora",
-      "homeButton": "Volver al Inicio"
-    },
-    "upgradeModal": {
-      "title": "Desbloquea {featureName}",
-      "premiumFeatureMessage": "Esta característica está disponible solo para usuarios premium",
-      "features": {
-        "unlimitedAccess": "Acceso ilimitado a {featureName}",
-        "aiPersonalizedLooks": "Looks personalizados con IA",
-        "unlimitedFavorites": "Favoritos ilimitados",
-        "prioritySupport": "Soporte prioritario"
-      },
-      "upgradeButton": "Mejorar Ahora",
-      "homeButton": "Volver al Inicio"
+      "title": "Acceso limitado",
+      "description": "{featureName} no está disponible en el plan gratuito.",
+      "notice": "Estamos preparando novedades aquí. Mientras tanto, aprovecha los recursos ya disponibles.",
+      "homeButton": "Volver al inicio"
     }
   },
   "errors": {
@@ -397,11 +391,17 @@
   },
   "premium": {
     "overlay": {
-      "title": "Desbloquear Funciones",
-      "subtitle": "Explora {feature} y mucho más con nuestra versión completa",
-      "notice": "Conviértete en un buscador sin límites. Aprende más.",
+      "title": "Límite del plan gratuito",
+      "subtitle": "{feature} no está disponible con el acceso actual.",
+      "notice": "Contacta a nuestro soporte si necesitas acceder a esta función.",
       "learnMore": "Saber más"
     }
+  },
+  "legal": {
+    "termsOfService": "Términos de Servicio",
+    "privacyPolicy": "Política de Privacidad",
+    "subscriptionDisclaimer": "Las suscripciones se renuevan automáticamente. Puedes cancelar en cualquier momento en la configuración de tu cuenta.",
+    "bySubscribing": "Al suscribirte, aceptas nuestros {terms} y {privacy}."
   },
   "languages": {
     "pt-br": "Português",

@@ -10,13 +10,11 @@ import {
 
 interface FeatureAccessNoticeProps {
   featureName: string;
-  onUpgrade: () => void;
   onGoHome: () => void;
 }
 
 export default function FeatureAccessNotice({
   featureName,
-  onUpgrade,
   onGoHome,
 }: FeatureAccessNoticeProps) {
   const { t } = useI18n();
@@ -37,11 +35,9 @@ export default function FeatureAccessNotice({
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.upgradeButton} onPress={onUpgrade}>
-          <Ionicons name="star" size={16} color="#FFFFFF" />
-          <Text style={styles.upgradeButtonText}>{t('components.featureAccess.upgradeButton')}</Text>
-        </TouchableOpacity>
-        
+        <Text style={styles.infoText}>
+          {t('components.featureAccess.notice')}
+        </Text>
         <TouchableOpacity style={styles.homeButton} onPress={onGoHome}>
           <Ionicons name="home" size={16} color="#FFFFFF" />
           <Text style={styles.homeButtonText}>{t('components.featureAccess.homeButton')}</Text>
@@ -89,21 +85,7 @@ const styles = StyleSheet.create({
   },
   actions: {
     width: '100%',
-    gap: 12,
-  },
-  upgradeButton: {
-    backgroundColor: '#000000',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  upgradeButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    gap: 16,
   },
   homeButton: {
     backgroundColor: '#1a1a1a',
@@ -120,5 +102,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#666666',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 4,
   },
 });

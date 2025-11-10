@@ -2,19 +2,9 @@ import { useI18n } from '@/contexts/I18nContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import {
-  Dimensions,
-  Linking,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  ViewStyle
-} from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 interface PlanLockNoticeProps {
-  onUpgrade?: () => void;
   style?: ViewStyle;
   variant?: 'default' | 'premium' | 'compact';
 }
@@ -23,22 +13,10 @@ const { width } = Dimensions.get('window');
 const isSmallScreen = width < 380;
 
 export default function PlanLockNotice({ 
-  onUpgrade, 
   style, 
   variant = 'default' 
 }: PlanLockNoticeProps) {
   const { t } = useI18n();
-  
-  const handlePress = () => {
-    if (onUpgrade) onUpgrade();
-    else {
-      // Redirecionar para o site externo para upgrade
-      const websiteUrl = 'https://lookfinder.app/upgrade';
-      Linking.openURL(websiteUrl).catch(() => {
-        console.error('Erro ao abrir URL de upgrade');
-      });
-    }
-  };
 
   const getContainerStyle = () => {
     switch (variant) {
@@ -63,11 +41,9 @@ export default function PlanLockNotice({
               {t('components.planLock.freeMessage')}
             </Text>
           </View>
-          <TouchableOpacity style={styles.compactButton} onPress={handlePress}>
-            <Text style={styles.compactButtonText}>
-              {t('components.planLock.upgradeCta')}
-            </Text>
-          </TouchableOpacity>
+          <Text style={styles.compactDetails}>
+            {t('components.planLock.freeDetails')}
+          </Text>
         </View>
       </View>
     );
@@ -87,17 +63,16 @@ export default function PlanLockNotice({
               <View style={styles.premiumIconContainer}>
                 <Ionicons name="diamond" size={20} color="#FFFFFF" />
               </View>
-              <Text style={styles.premiumTitle}>Premium Feature</Text>
+              <Text style={styles.premiumTitle}>
+                {t('components.planLock.heading')}
+              </Text>
             </View>
             <Text style={styles.premiumText}>
               {t('components.planLock.freeMessage')}
             </Text>
-            <TouchableOpacity style={styles.premiumButton} onPress={handlePress}>
-              <Text style={styles.premiumButtonText}>
-                {t('components.planLock.upgradeCta')}
-              </Text>
-              <Ionicons name="arrow-forward" size={16} color="#000000" />
-            </TouchableOpacity>
+            <Text style={styles.premiumDetails}>
+              {t('components.planLock.freeDetails')}
+            </Text>
           </View>
         </LinearGradient>
       </View>
@@ -112,19 +87,15 @@ export default function PlanLockNotice({
             <Ionicons name="lock-closed" size={20} color="#FFFFFF" />
           </View>
           <View style={styles.textContainer}>
-            <Text style={styles.title}>Recurso Premium</Text>
+            <Text style={styles.title}>{t('components.planLock.heading')}</Text>
             <Text style={styles.subtitle}>
               {t('components.planLock.freeMessage')}
             </Text>
+            <Text style={styles.subtitleMuted}>
+              {t('components.planLock.freeDetails')}
+            </Text>
           </View>
         </View>
-        
-          <TouchableOpacity style={styles.button} onPress={handlePress}>
-          <Text style={styles.buttonText}>
-            {t('components.planLock.upgradeCta')}
-          </Text>
-          <Ionicons name="arrow-forward" size={16} color="#000000" />
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -205,22 +176,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  premiumButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    alignSelf: 'flex-start',
-  },
-
-  premiumButtonText: {
-    color: '#000000',
-    fontSize: 14,
-    fontWeight: '600',
+  premiumDetails: {
+    color: 'rgba(255, 255, 255, 0.65)',
+    fontSize: 12,
+    lineHeight: 18,
   },
 
   // Container compacto
@@ -254,17 +213,10 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
 
-  compactButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-
-  compactButtonText: {
-    color: '#000000',
-    fontSize: 12,
-    fontWeight: '600',
+  compactDetails: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 11,
+    fontWeight: '500',
   },
 
   // Estilos do layout padrão
@@ -307,34 +259,9 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
 
-  button: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    alignSelf: 'flex-start',
-    minWidth: 140,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#111827',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-
-  buttonText: {
-    color: '#000000',
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+  subtitleMuted: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: isSmallScreen ? 12 : 13,
+    lineHeight: 18,
   },
 });

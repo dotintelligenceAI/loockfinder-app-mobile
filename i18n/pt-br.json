@@ -106,8 +106,7 @@
         "remaining": "Carregar novos looks ({count} restantes)"
       },
       "upgrade": {
-        "categoryMessage": "Explore looks sem fim com o finder premium, saiba mais",
-        "upgradeButton": "Fazer Upgrade"
+        "categoryMessage": "Algumas categorias ficam indisponíveis no plano gratuito atual."
       }
     },
     "chat": {
@@ -229,7 +228,7 @@
       "featureDescription": "Acesse cupons exclusivos com descontos de até 70% em suas lojas favoritas."
     },
     "links": {
-      "title": "Links",
+      "title": "Peças",
       "usefulLinks": "Links úteis",
       "about": "Sobre",
       "privacy": "Privacidade",
@@ -249,10 +248,10 @@
         "accessories": "Acessórios",
         "blazers": "Blazers"
       },
-      "headerTitle": "LINKS DE COMPRA",
-      "welcomeUserPrefix": "Encontre as melhores ofertas,",
-      "buy": "Comprar",
-      "invalidLink": "Link inválido",
+      "headerTitle": "ENCONTRE PEÇAS",
+      "welcomeUserPrefix": "Explore referências de estilo,",
+      "buy": "Abrir",
+      "invalidLink": "Link indisponível",
       "items": {
         "dress": {
           "title": "Vestido Floral Primavera",
@@ -278,11 +277,11 @@
         "eleganceFashion": "Elegance Fashion"
       },
       "paywall": {
-        "message": "Links de compras são exclusivos para assinantes.",
-        "cta": "Fazer Upgrade"
+        "message": "Algumas peças sugeridas não estão disponíveis no acesso atual.",
+        "cta": "Falar com suporte"
       },
-      "featureName": "Links de Compra",
-      "featureDescription": "Acesse milhares de links de compra com preços exclusivos e ofertas especiais."
+      "featureName": "Peças em destaque",
+      "featureDescription": "Descubra sugestões de peças e referências inspiradoras."
     },
     "perfil": {
       "title": "Perfil",
@@ -336,7 +335,13 @@
       "plan": {
         "free": "Finder Free",
         "expires": "Expira em",
-        "change": "Upgrade / Alterar Plano"
+        "change": "Gerenciar plano"
+      },
+      "limits": {
+        "freeTitle": "Plano Finder Free",
+        "freeDescription": "Algumas funções ficam indisponíveis neste plano gratuito.",
+        "activeTitle": "Plano em uso",
+        "activeDescription": "Seu perfil está com o acesso configurado para utilizar este recurso."
       },
       "logout": {
         "title": "Sair da conta",
@@ -418,27 +423,16 @@
       "pleaseWait": "Por favor, aguarde..."
     },
     "planLock": {
-      "freeMessage": "Plano Finder Free",
-      "upgradeCta": "Upgrade"
+      "heading": "Função indisponível",
+      "freeMessage": "Este recurso não está disponível no acesso gratuito.",
+      "freeDetails": "Algumas funcionalidades ficam reservadas para perfis com acesso completo."
     },
     "featureAccess": {
       "title": "Acesso Limitado",
-      "description": "{featureName} está disponível apenas para usuários premium",
-      "upgradeButton": "Fazer Upgrade",
+      "description": "{featureName} não está disponível no plano gratuito.",
+      "notice": "Em breve liberaremos novidades por aqui. Enquanto isso, explore os recursos já disponíveis.",
       "homeButton": "Voltar para Home"
     },
-    "upgradeModal": {
-      "title": "Desbloqueie {featureName}",
-      "premiumFeatureMessage": "Esta feature está disponível apenas para usuários premium",
-      "features": {
-        "unlimitedAccess": "Acesso ilimitado a {featureName}",
-        "aiPersonalizedLooks": "Looks personalizados com IA",
-        "unlimitedFavorites": "Favoritos ilimitados",
-        "prioritySupport": "Suporte prioritário"
-      },
-      "upgradeButton": "Fazer Upgrade",
-      "homeButton": "Voltar para Home"
-    }
   },
   "errors": {
     "network": "Erro de conexão",
@@ -453,11 +447,17 @@
   },
   "premium": {
     "overlay": {
-      "title": "Desbloquear Recursos",
-      "subtitle": "Explore {feature} e muito mais com nossa versão completa",
-      "notice": "Seja uma finder sem limites. Siba mais",
+      "title": "Limite do Plano Gratuito",
+      "subtitle": "{feature} não está disponível neste acesso.",
+      "notice": "Entre em contato com nosso suporte se precisar de acesso a este recurso.",
       "learnMore": "Saiba mais"
     }
+  },
+  "legal": {
+    "termsOfService": "Termos de Uso",
+    "privacyPolicy": "Política de Privacidade",
+    "subscriptionDisclaimer": "As assinaturas são renovadas automaticamente. Você pode cancelar a qualquer momento nas configurações da sua conta.",
+    "bySubscribing": "Ao assinar, você concorda com nossos {terms} e {privacy}."
   },
   "languages": {
     "pt-br": "Português",

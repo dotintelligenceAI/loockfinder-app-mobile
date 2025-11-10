@@ -18,5 +18,3 @@ export { Preloader } from './Preloader';
 export { PremiumOverlay } from './PremiumOverlay';
 export { ProtectedRoute } from './ProtectedRoute';
 export { Toast } from './Toast';
-export { UpgradeModal } from './UpgradeModal';
-

@@ -165,8 +165,14 @@ class IAPService {
 
   /**
    * Valida receipt com a Apple (Production e Sandbox)
+   * Retorna informações completas da assinatura
    */
-  private async validateReceipt(receiptData: string): Promise<{ success: boolean; error?: string }> {
+  private async validateReceipt(receiptData: string): Promise<{ 
+    success: boolean; 
+    error?: string;
+    expiresDate?: string;
+    isActive?: boolean;
+  }> {
     try {
       console.log('🔐 Validando receipt com Apple...');
 
@@ -208,7 +214,30 @@ class IAPService {
       // 3. Verificar status da validação
       if (result.status === 0) {
         console.log('✅ Receipt validado com sucesso');
-        return { success: true };
+        
+        // CRÍTICO: Extrair informações da assinatura retornadas pela Apple
+        const latestReceiptInfo = result.latest_receipt_info?.[0];
+        const pendingRenewalInfo = result.pending_renewal_info?.[0];
+        
+        if (latestReceiptInfo) {
+          // Obter data de expiração real da Apple
+          const expiresDate = new Date(parseInt(latestReceiptInfo.expires_date_ms));
+          const isActive = expiresDate > new Date();
+          
+          console.log('📅 Assinatura expira em:', expiresDate);
+          console.log('✅ Assinatura ativa:', isActive);
+          console.log('🔄 Auto-renew status:', pendingRenewalInfo?.auto_renew_status_change_date);
+          
+          return { 
+            success: true,
+            expiresDate: expiresDate.toISOString(),
+            isActive
+          };
+        }
+        
+        // Se não tem informações de assinatura, considerar inativo
+        console.warn('⚠️ Receipt validado mas sem informações de assinatura');
+        return { success: true, isActive: false };
       } else {
         console.error('❌ Falha na validação do receipt:', result.status);
         return { 
@@ -227,6 +256,7 @@ class IAPService {
 
   /**
    * Processa uma compra
+   * Valida o receipt com a Apple e usa dados reais de expiração
    */
   private async processPurchase(purchase: Purchase): Promise<{ success: boolean; error?: string }> {
     try {
@@ -238,25 +268,38 @@ class IAPService {
         return { success: false, error: 'Usuário não autenticado' };
       }
 
-      // CRÍTICO: Validar receipt com a Apple antes de processar
-      // Obter receipt data (campo diferente em iOS vs Android)
+      // CRÍTICO: Obter e validar receipt com a Apple
       const receiptData = (purchase as any).transactionReceipt || (purchase as any).purchaseToken;
       
-      if (receiptData) {
-        console.log('🔐 Validando receipt antes de processar...');
-        const validationResult = await this.validateReceipt(receiptData);
-        
-        if (!validationResult.success) {
-          console.error('❌ Receipt inválido:', validationResult.error);
-          return { 
-            success: false, 
-            error: 'Falha na validação do recibo. Por favor, tente novamente.' 
-          };
-        }
-        console.log('✅ Receipt validado com sucesso');
-      } else {
-        console.warn('⚠️ Purchase sem receipt, prosseguindo com cautela...');
+      if (!receiptData) {
+        console.error('❌ Receipt não encontrado na compra');
+        return { 
+          success: false, 
+          error: 'Receipt não encontrado. Por favor, tente novamente.' 
+        };
       }
+
+      console.log('🔐 Validando receipt antes de processar...');
+      const validationResult = await this.validateReceipt(receiptData);
+      
+      if (!validationResult.success) {
+        console.error('❌ Receipt inválido:', validationResult.error);
+        return { 
+          success: false, 
+          error: 'Falha na validação do recibo. Por favor, tente novamente.' 
+        };
+      }
+
+      // IMPORTANTE: Verificar se a assinatura está ativa
+      if (!validationResult.isActive) {
+        console.error('❌ Assinatura inativa ou expirada');
+        return {
+          success: false,
+          error: 'Assinatura expirada ou inativa. Por favor, tente novamente.'
+        };
+      }
+
+      console.log('✅ Receipt validado com sucesso - Assinatura ativa');
 
       // Mapear produto IAP para plano do sistema
       const planMapping = this.getPlanMapping(purchase.productId);
@@ -264,13 +307,19 @@ class IAPService {
         return { success: false, error: 'Produto não reconhecido' };
       }
 
-      // Atualizar perfil do usuário
+      // CRÍTICO: Usar a data de expiração REAL retornada pela Apple
+      const expirationDate = validationResult.expiresDate || 
+                            this.calculateExpirationDate(planMapping.billingPeriod);
+
+      console.log('📅 Data de expiração definida:', expirationDate);
+
+      // Atualizar perfil do usuário com dados validados
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           subscription_status: 'active',
           current_plan_id: planMapping.planId,
-          subscription_expires_at: planMapping.isLifetime ? null : this.calculateExpirationDate(planMapping.billingPeriod),
+          subscription_expires_at: expirationDate,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -280,8 +329,8 @@ class IAPService {
         return { success: false, error: 'Erro ao ativar plano' };
       }
 
-      // Registrar compra
-      await this.recordPurchase(user.id, purchase, planMapping);
+      // Registrar compra COM os dados do receipt
+      await this.recordPurchase(user.id, purchase, planMapping, receiptData);
 
       console.log('✅ Compra processada com sucesso');
       return { success: true };
@@ -369,23 +418,31 @@ class IAPService {
   }
 
   /**
-   * Registra a compra no banco de dados
+   * Registra a compra no banco de dados com receipt para validação futura
    */
-  private async recordPurchase(userId: string, purchase: Purchase, planMapping: any): Promise<void> {
+  private async recordPurchase(
+    userId: string, 
+    purchase: Purchase, 
+    planMapping: any,
+    receiptData: string
+  ): Promise<void> {
     try {
       await supabase.from('iap_purchases').insert({
         user_id: userId,
         product_id: purchase.productId,
         transaction_id: purchase.transactionId,
         purchase_token: purchase.purchaseToken,
+        receipt_data: receiptData, // CRÍTICO: Salvar receipt para validações futuras
         original_transaction_id: (purchase as any).originalTransactionIdIOS || purchase.transactionId,
         plan_id: planMapping.planId,
         purchase_date: new Date(purchase.transactionDate).toISOString(),
         is_restored: false,
         status: 'completed'
       });
+      console.log('✅ Compra registrada no banco de dados');
     } catch (error) {
       console.error('❌ Erro ao registrar compra:', error);
+      // Não falhar a compra se o registro falhar
     }
   }
 
@@ -402,6 +459,78 @@ class IAPService {
       localizedPrice: (product as any).localizedPrice || product.price?.toString() || '0',
       type: 'non_consumable',
     };
+  }
+
+  /**
+   * Verifica o status atual de uma assinatura validando com a Apple
+   * Útil para verificar se a assinatura ainda está ativa
+   */
+  async checkSubscriptionStatus(userId: string): Promise<{ 
+    isActive: boolean; 
+    expiresAt?: string;
+    error?: string;
+  }> {
+    try {
+      console.log('🔍 Verificando status da assinatura para usuário:', userId);
+
+      // Buscar última compra do usuário no banco
+      const { data: purchase, error: fetchError } = await supabase
+        .from('iap_purchases')
+        .select('receipt_data, product_id, purchase_date')
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+        .order('purchase_date', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (fetchError || !purchase?.receipt_data) {
+        console.warn('⚠️ Nenhuma compra encontrada para o usuário');
+        return { isActive: false };
+      }
+
+      // Validar receipt atualizado com a Apple
+      console.log('🔐 Validando receipt atualizado com Apple...');
+      const validationResult = await this.validateReceipt(purchase.receipt_data);
+      
+      if (!validationResult.success) {
+        console.error('❌ Erro ao validar receipt:', validationResult.error);
+        return { 
+          isActive: false,
+          error: validationResult.error
+        };
+      }
+
+      console.log('✅ Status da assinatura verificado:', {
+        isActive: validationResult.isActive,
+        expiresAt: validationResult.expiresDate
+      });
+
+      // Se o status mudou, atualizar o perfil
+      if (validationResult.isActive !== undefined) {
+        const newStatus = validationResult.isActive ? 'active' : 'canceled';
+        await supabase
+          .from('profiles')
+          .update({
+            subscription_status: newStatus,
+            subscription_expires_at: validationResult.expiresDate,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', userId);
+        
+        console.log(`✅ Status do perfil atualizado para: ${newStatus}`);
+      }
+
+      return {
+        isActive: validationResult.isActive || false,
+        expiresAt: validationResult.expiresDate
+      };
+    } catch (error) {
+      console.error('❌ Erro ao verificar status da assinatura:', error);
+      return { 
+        isActive: false,
+        error: error instanceof Error ? error.message : 'Erro ao verificar status'
+      };
+    }
   }
 
   /**
